@@ -1,0 +1,55 @@
+{
+  "name": "Alex Rivera",
+  "title": "Full-Stack Software Engineer",
+  "summary": "Product-minded engineer with 5+ years building scalable web apps, internal tools, and design systems. Comfortable across the stack and obsessed with reducing complexity for users.",
+  "contact": {
+    "email": "alex.rivera@example.com",
+    "phone": "+1 555-0123",
+    "location": "San Francisco, CA",
+    "website": "https://alexrivera.dev"
+  },
+  "experience": [
+    {
+      "role": "Senior Software Engineer",
+      "organization": "Stripe",
+      "dates": "2021 – Present",
+      "description": "Led rebuild of the merchant onboarding dashboard using React and Node. Cut support ticket volume by 30% and improved time-to-first-payout by 25%."
+    },
+    {
+      "role": "Software Engineer",
+      "organization": "Airbnb",
+      "dates": "2019 – 2021",
+      "description": "Built pricing insights tools used by 10k+ hosts. Contributed to the internal component library and mentored two interns."
+    }
+  ],
+  "education": [
+    {
+      "degree": "B.S. Computer Science",
+      "institution": "University of California, Berkeley",
+      "dates": "2015 – 2019",
+      "details": "GPA 3.8, CS Tutoring Club Lead"
+    }
+  ],
+  "skills": [
+    "JavaScript",
+    "TypeScript",
+    "React",
+    "Node.js",
+    "PostgreSQL",
+    "AWS",
+    "Figma",
+    "System Design"
+  ],
+  "projects": [
+    {
+      "name": "Open Source Design System",
+      "description": "A set of accessible UI primitives used by 200+ projects on GitHub.",
+      "link": "https://github.com/alexrivera/ui-primitives"
+    },
+    {
+      "name": "Personal Finance CLI",
+      "description": "Terminal-based budgeting tool that syncs with bank CSV exports.",
+      "link": "https://github.com/alexrivera/finance-cli"
+    }
+  ]
+}
