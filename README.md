@@ -30,10 +30,13 @@ GROQ_API_KEY=your_groq_key
 GROQ_BASE_URL=https://api.groq.com/openai/v1
 GROQ_MODEL=qwen/qwen3.8-27b
 VERCEL_TOKEN=your_vercel_token
+VERCEL_TEAM_ID=your_optional_team_id
+# Development only; public publishing should use Vercel.
+ALLOW_LOCAL_DEPLOY=false
 PUBLIC_BASE_URL=http://localhost:3003
 ```
 
-If `VERCEL_TOKEN` is omitted, publishing falls back to local files served from `backend/published`.
+Public publishing requires `VERCEL_TOKEN`; a failed Vercel request is returned to the user instead of producing a localhost link. For isolated local development only, set `ALLOW_LOCAL_DEPLOY=true` to publish static files under `backend/published`.
 
 ## Run locally
 

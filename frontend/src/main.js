@@ -178,6 +178,9 @@ function renderPreviewPane() {
     class: 'preview-frame',
     title: 'Live portfolio preview',
   });
+  previewKey = null;
+  clearTimeout(previewTimer);
+  previewTimer = null;
   updatePreview(true);
   return el('aside', { class: 'app-preview' }, [
     el('div', { class: 'preview-header' }, [
@@ -193,8 +196,13 @@ function getPreviewKey() {
 }
 
 function updatePreview(immediate = false) {
+  const frame = previewFrame;
   const key = getPreviewKey();
-  if (key === previewKey && previewFrame?.srcdoc) return;
+
+  clearTimeout(previewTimer);
+  previewTimer = null;
+
+  if (!frame || (key === previewKey && frame.srcdoc)) return;
 
   const html = renderPortfolio(state.resume, state.layout, state.preset);
   const layoutChanged = state.layout !== lastPreviewLayout;
@@ -202,14 +210,13 @@ function updatePreview(immediate = false) {
   const shouldUpdateImmediately = immediate || layoutChanged || presetChanged;
 
   const apply = () => {
-    if (!previewFrame) return;
-    previewFrame.srcdoc = html;
+    if (!frame) return;
+    frame.srcdoc = html;
     previewKey = key;
     lastPreviewLayout = state.layout;
     lastPreviewPreset = state.preset;
   };
 
-  clearTimeout(previewTimer);
   if (shouldUpdateImmediately) {
     apply();
   } else {
@@ -294,9 +301,6 @@ function renderAuthView() {
 function renderApp() {
   app.innerHTML = '';
   app.appendChild(renderCurrentView());
-  if (state.view === 'app') {
-    updatePreview();
-  }
 }
 
 async function initAuth() {

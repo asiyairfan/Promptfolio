@@ -25,9 +25,19 @@ CREATE TABLE IF NOT EXISTS public.portfolios (
   layout text NOT NULL DEFAULT 'timeline',
   preset text NOT NULL DEFAULT 'modern',
   published_url text,
+  deploy_provider text,
+  deploy_project_id text,
+  deploy_project_name text,
+  deployment_id text,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
+
+-- Backfill-safe migration for projects created before deployment metadata was tracked.
+ALTER TABLE public.portfolios ADD COLUMN IF NOT EXISTS deploy_provider text;
+ALTER TABLE public.portfolios ADD COLUMN IF NOT EXISTS deploy_project_id text;
+ALTER TABLE public.portfolios ADD COLUMN IF NOT EXISTS deploy_project_name text;
+ALTER TABLE public.portfolios ADD COLUMN IF NOT EXISTS deployment_id text;
 
 -- Indexes for common lookups.
 CREATE INDEX IF NOT EXISTS idx_portfolios_user_id ON public.portfolios(user_id);

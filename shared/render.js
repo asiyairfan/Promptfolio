@@ -25,6 +25,14 @@ export function safeUrl(raw) {
   }
 }
 
+function safeImageUrl(raw) {
+  if (!raw) return '';
+  const trimmed = raw.trim();
+  if (/^data:image\/(jpeg|png);base64,/i.test(trimmed)) return trimmed;
+  const url = safeUrl(trimmed);
+  return /^https?:\/\//i.test(url) ? url : '';
+}
+
 function joinLines(text) {
   return escapeHtml(text)
     .split(/\n+/)
@@ -33,7 +41,7 @@ function joinLines(text) {
 }
 
 function avatarHtml(url, shape, size = '96px') {
-  const safe = safeUrl(url);
+  const safe = safeImageUrl(url);
   if (!safe || shape === 'none') return '';
   const shapeClass = `avatar-${shape}`;
   return `<img class="avatar ${shapeClass}" src="${escapeHtml(safe)}" alt="" style="width:${size};height:${size}">`;
@@ -43,20 +51,13 @@ function hasContact(contact) {
   return contact && (contact.email || contact.phone || contact.location || contact.website);
 }
 
-function navHtml(resume) {
+function navHtml(resume, links, variant = '') {
   const name = escapeHtml(resume.name || 'Portfolio');
-  const links = [
-    { id: 'about', label: 'About' },
-    { id: 'services', label: 'Services' },
-    { id: 'resume', label: 'Resume' },
-    { id: 'projects', label: 'Projects' },
-    { id: 'contact', label: 'Contact' }
-  ];
   const items = links
-    .map((l) => `<a href="#${l.id}" class="nav-link">${l.label}</a>`)
+    .map((link) => `<a href="#${link.id}" class="nav-link">${escapeHtml(link.label)}</a>`)
     .join('');
   return `
-    <nav class="site-nav">
+    <nav class="site-nav ${variant}">
       <div class="nav-inner">
         <a href="#top" class="nav-brand">${name}</a>
         <div class="nav-links">${items}</div>
@@ -73,10 +74,17 @@ function ctaHtml(text = 'Get in touch', href = '#contact') {
   return `<a class="cta-button" href="${escapeHtml(link)}">${escapeHtml(text)}</a>`;
 }
 
-function skillChipsHtml(skills, limit = 6) {
+function skillChipsHtml(skills, skillStyle = 'chip', limit = 6) {
   if (!skills || skills.length === 0) return '';
-  const chips = skills.slice(0, limit).map((s) => `<span class="hero-skill">${escapeHtml(s)}</span>`).join('');
-  return `<div class="hero-skills">${chips}</div>`;
+  const visible = skills.slice(0, limit);
+  if (skillStyle === 'inline') {
+    const items = visible.map((s) => `<span class="hero-skill-inline">${escapeHtml(s)}</span>`).join(', ');
+    return `<div class="hero-skills hero-skills-inline">${items}</div>`;
+  }
+  const chips = visible
+    .map((s) => `<span class="hero-skill ${skillStyle === 'outline' ? 'hero-skill-outline' : ''}">${escapeHtml(s)}</span>`)
+    .join('');
+  return `<div class="hero-skills hero-skills-${skillStyle}">${chips}</div>`;
 }
 
 function socialLinksHtml(contact) {
@@ -99,112 +107,119 @@ function socialLinksHtml(contact) {
   return `<div class="hero-socials">${items}</div>`;
 }
 
-function heroAvatarHtml(contact, name, size = '280px') {
-  const avatar = avatarHtml(contact.avatarUrl, getPreset().tokens.avatarShape, size);
-  if (avatar) return avatar;
-  const initial = escapeHtml((name || 'P').charAt(0));
-  return `<div class="hero-avatar-placeholder">${initial}</div>`;
+function heroAvatarHtml(contact, name, preset, size = '280px') {
+  return avatarHtml(contact.avatarUrl, preset.tokens.avatarShape, size);
 }
 
-function heroHtml(resume, layout) {
-  const c = resume.contact || {};
+function studioHeroHtml(resume, preset) {
+  const contact = resume.contact || {};
   const name = escapeHtml(resume.name || 'Your Name');
   const title = escapeHtml(resume.title || '');
   const summary = resume.summary ? joinLines(resume.summary) : '';
-  const skills = skillChipsHtml(resume.skills, 6);
-  const socials = socialLinksHtml(c);
+  const location = escapeHtml(contact.location || 'Independent portfolio');
+  const experienceCount = resume.experience?.length || 0;
+  const projectCount = resume.projects?.length || 0;
+  const skillCount = resume.skills?.length || 0;
+  const portrait = heroAvatarHtml(contact, name, preset, '100%');
 
-  if (layout === 'creative') {
-    return `
-      <header class="site-hero hero-creative" id="top">
-        <div class="hero-creative-bg"></div>
-        <div class="hero-creative-shape"></div>
-        <div class="hero-creative-dots"></div>
-        <div class="hero-inner">
-          <div class="hero-content">
-            <p class="hero-eyebrow">Hello, I'm</p>
-            <h1>${name}</h1>
-            ${title ? `<p class="hero-title">${title}</p>` : ''}
-            ${summary ? `<div class="hero-summary">${summary}</div>` : ''}
-            ${skills}
-            <div class="hero-actions">
-              ${ctaHtml('View my work', '#projects')}
-              ${ctaHtml('Contact me', '#contact')}
-            </div>
-            ${socials}
-          </div>
-          <div class="hero-visual hero-visual-framed">
-            <div class="hero-visual-ring"></div>
-            ${heroAvatarHtml(c, name, '320px')}
-          </div>
-        </div>
-      </header>
-    `;
-  }
-
-  if (layout === 'minimal') {
-    return `
-      <header class="site-hero hero-minimal" id="top">
-        <div class="hero-minimal-glow"></div>
-        <div class="hero-inner">
-          <div class="hero-minimal-avatar">
-            <div class="hero-visual-ring"></div>
-            ${heroAvatarHtml(c, name, '220px')}
-          </div>
-          <p class="hero-eyebrow">Hello, I'm</p>
-          <h1>${name}</h1>
-          ${title ? `<p class="hero-title">${title}</p>` : ''}
-          ${summary ? `<div class="hero-summary">${summary}</div>` : ''}
-          ${skills}
-          <div class="hero-actions">
-            ${ctaHtml('View my work', '#projects')}
-            ${ctaHtml('Contact me', '#contact')}
-          </div>
-          ${socials}
-        </div>
-      </header>
-    `;
-  }
-
-  // studio default
   return `
-    <header class="site-hero hero-studio" id="top">
-      <div class="hero-studio-glow"></div>
-      <div class="hero-studio-blob"></div>
-      <div class="hero-inner">
-        <div class="hero-text">
-          <p class="hero-eyebrow">Hello, I'm</p>
+    <header class="site-hero studio-hero" id="top">
+      <div class="studio-hero-grid ${portrait ? '' : 'studio-hero-grid--no-portrait'}">
+        <div class="studio-hero-copy">
+          <p class="hero-eyebrow">Digital portfolio</p>
           <h1>${name}</h1>
           ${title ? `<p class="hero-title">${title}</p>` : ''}
           ${summary ? `<div class="hero-summary">${summary}</div>` : ''}
-          ${skills}
           <div class="hero-actions">
-            ${ctaHtml('View my work', '#projects')}
-            ${ctaHtml('Contact me', '#contact')}
+            ${ctaHtml('Explore projects', '#projects')}
+            ${ctaHtml('Start a conversation', '#contact')}
           </div>
-          ${socials}
+          ${socialLinksHtml(contact)}
         </div>
-        <div class="hero-visual hero-visual-framed">
-          <div class="hero-visual-ring"></div>
-          ${heroAvatarHtml(c, name, '320px')}
+        ${portrait ? `
+        <aside class="studio-portrait-panel">
+          <div class="studio-portrait">
+            ${portrait}
+          </div>
+          <div class="studio-portrait-meta">
+            <span>Based in</span>
+            <strong>${location}</strong>
+          </div>
+        </aside>
+        ` : ''}
+      </div>
+      <div class="studio-highlights" aria-label="Portfolio highlights">
+        <div><strong>${experienceCount}</strong><span>${experienceCount === 1 ? 'Role' : 'Roles'}</span></div>
+        <div><strong>${projectCount}</strong><span>${projectCount === 1 ? 'Project' : 'Projects'}</span></div>
+        <div><strong>${skillCount}</strong><span>${skillCount === 1 ? 'Skill' : 'Skills'}</span></div>
+      </div>
+    </header>
+  `;
+}
+
+function creativeHeroHtml(resume) {
+  const contact = resume.contact || {};
+  const name = escapeHtml(resume.name || 'Your Name');
+  const title = escapeHtml(resume.title || '');
+  const summary = resume.summary ? joinLines(resume.summary) : '';
+
+  return `
+    <header class="site-hero creative-hero" id="top">
+      <div class="creative-hero-grid">
+        <p class="creative-index">Portfolio / 01</p>
+        <div class="creative-hero-title">
+          <p class="hero-eyebrow">Selected work by</p>
+          <h1>${name}</h1>
+          ${title ? `<p class="hero-title">${title}</p>` : ''}
+        </div>
+        <div class="creative-hero-notes">
+          ${summary ? `<div class="hero-summary">${summary}</div>` : ''}
+          <div class="hero-actions">
+            ${ctaHtml('View the work', '#projects')}
+            ${ctaHtml('Get in touch', '#contact')}
+          </div>
+          ${socialLinksHtml(contact)}
         </div>
       </div>
     </header>
   `;
 }
 
-function aboutHtml(resume) {
+function minimalHeroHtml(resume, preset) {
+  const contact = resume.contact || {};
+  const name = escapeHtml(resume.name || 'Your Name');
+  const title = escapeHtml(resume.title || '');
+  const summary = resume.summary ? joinLines(resume.summary) : '';
+  const skills = skillChipsHtml(resume.skills, preset.tokens.skillStyle, 8);
+
+  return `
+    <header class="site-hero minimal-hero" id="top">
+      <div class="minimal-hero-copy">
+        <p class="hero-eyebrow">Portfolio</p>
+        <h1>${name}</h1>
+        ${title ? `<p class="hero-title">${title}</p>` : ''}
+        ${summary ? `<div class="hero-summary">${summary}</div>` : ''}
+        ${skills}
+        <div class="hero-actions">
+          ${ctaHtml('Projects', '#projects')}
+          ${ctaHtml('Contact', '#contact')}
+        </div>
+        ${socialLinksHtml(contact)}
+      </div>
+    </header>
+  `;
+}
+
+function aboutHtml(resume, preset) {
   const c = resume.contact || {};
   const summary = resume.summary ? joinLines(resume.summary) : '';
-  if (!summary && !c.avatarUrl) return '';
-  const avatar = avatarHtml(c.avatarUrl, getPreset().tokens.avatarShape, '180px');
+  const avatar = avatarHtml(c.avatarUrl, preset.tokens.avatarShape, '180px');
+  if (!summary && !avatar) return '';
   return `
     <section class="section about-section" id="about">
       <div class="section-inner">
-        <div class="about-grid">
-          <div class="about-visual">
-            ${avatar || `<div class="about-avatar-placeholder">${escapeHtml((resume.name || 'P').charAt(0))}</div>`}
-          </div>
+        <div class="about-grid ${avatar ? '' : 'about-grid--no-visual'}">
+          ${avatar ? `<div class="about-visual">${avatar}</div>` : ''}
           <div class="about-content">
             <p class="section-eyebrow">About me</p>
             <h2 class="section-title">Who I am</h2>
@@ -283,19 +298,64 @@ function educationContentHtml(items) {
   `;
 }
 
+function minimalResumeHtml(resume) {
+  const experience = resume.experience || [];
+  const education = resume.education || [];
+  const skills = resume.skills || [];
+  if (experience.length === 0 && education.length === 0 && skills.length === 0) return '';
+
+  const experienceRows = experience
+    .map((item) => `
+      <article class="minimal-resume-row">
+        <div>
+          <h3>${escapeHtml(item.role)}</h3>
+          ${item.organization ? `<p>${escapeHtml(item.organization)}</p>` : ''}
+        </div>
+        ${item.dates ? `<time>${escapeHtml(item.dates)}</time>` : ''}
+      </article>
+    `)
+    .join('');
+  const educationRows = education
+    .map((item) => `
+      <article class="minimal-resume-row">
+        <div>
+          <h3>${escapeHtml(item.degree)}</h3>
+          ${item.institution ? `<p>${escapeHtml(item.institution)}</p>` : ''}
+        </div>
+        ${item.dates ? `<time>${escapeHtml(item.dates)}</time>` : ''}
+      </article>
+    `)
+    .join('');
+  const skillsList = skills.map((skill) => `<li>${escapeHtml(skill)}</li>`).join('');
+
+  return `
+    <section class="section minimal-resume-section" id="resume">
+      <div class="section-inner minimal-resume-inner">
+        <p class="section-eyebrow">Resume</p>
+        <h2 class="section-title">Experience at a glance</h2>
+        ${experienceRows ? `<div class="minimal-resume-group"><h3>Experience</h3>${experienceRows}</div>` : ''}
+        ${educationRows ? `<div class="minimal-resume-group"><h3>Education</h3>${educationRows}</div>` : ''}
+        ${skillsList ? `<ul class="minimal-skills-list">${skillsList}</ul>` : ''}
+      </div>
+    </section>
+  `;
+}
+
 function projectsHtml(items) {
   if (!items || items.length === 0) return '';
   const cards = items
     .map((item) => {
       const link = safeUrl(item.link);
+      const imageUrl = safeImageUrl(item.imageUrl);
       const title = link
         ? `<a href="${escapeHtml(link)}" target="_blank" rel="noopener">${escapeHtml(item.name)}</a>`
         : escapeHtml(item.name);
+      const visual = imageUrl
+        ? `<img class="project-image" src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.name || 'Project')} project preview" loading="lazy">`
+        : `<span class="project-initial">${escapeHtml((item.name || 'P').charAt(0))}</span>`;
       return `
         <article class="project-card">
-          <div class="project-visual">
-            <span class="project-initial">${escapeHtml((item.name || 'P').charAt(0))}</span>
-          </div>
+          <div class="project-visual">${visual}</div>
           <div class="project-body">
             <h3>${title}</h3>
             ${item.description ? `<p>${escapeHtml(item.description)}</p>` : ''}
@@ -354,12 +414,12 @@ function footerHtml(resume) {
   `;
 }
 
-function buildStudio(resume) {
+function buildStudio(resume, preset) {
   const exp = experienceContentHtml(resume.experience);
   const edu = educationContentHtml(resume.education);
   return [
-    heroHtml(resume, 'studio'),
-    aboutHtml(resume),
+    studioHeroHtml(resume, preset),
+    aboutHtml(resume, preset),
     servicesHtml(resume.skills),
     exp ? `<section class="section resume-section" id="resume"><div class="section-inner">${exp}</div></section>` : '',
     edu ? `<section class="section education-section"><div class="section-inner">${edu}</div></section>` : '',
@@ -373,25 +433,19 @@ function buildCreative(resume) {
   const exp = experienceContentHtml(resume.experience);
   const edu = educationContentHtml(resume.education);
   return [
-    heroHtml(resume, 'creative'),
-    aboutHtml(resume),
+    creativeHeroHtml(resume),
+    projectsHtml(resume.projects),
     servicesHtml(resume.skills),
     (exp || edu) ? `<section class="section resume-section" id="resume"><div class="section-inner">${exp}${edu}</div></section>` : '',
-    projectsHtml(resume.projects),
     contactHtml(resume.contact),
     footerHtml(resume)
   ].join('');
 }
 
-function buildMinimal(resume) {
-  const exp = experienceContentHtml(resume.experience);
-  const edu = educationContentHtml(resume.education);
+function buildMinimal(resume, preset) {
   return [
-    heroHtml(resume, 'minimal'),
-    aboutHtml(resume),
-    servicesHtml(resume.skills),
-    exp ? `<section class="section resume-section" id="resume"><div class="section-inner">${exp}</div></section>` : '',
-    edu ? `<section class="section education-section"><div class="section-inner">${edu}</div></section>` : '',
+    minimalHeroHtml(resume, preset),
+    minimalResumeHtml(resume),
     projectsHtml(resume.projects),
     contactHtml(resume.contact),
     footerHtml(resume)
@@ -401,14 +455,36 @@ function buildMinimal(resume) {
 const LAYOUT_BUILDERS = {
   studio: buildStudio,
   creative: buildCreative,
-  minimal: buildMinimal,
-  // legacy aliases fall back to studio
-  timeline: buildStudio,
-  sidebar: buildStudio,
-  split: buildCreative,
-  cards: buildStudio,
-  magazine: buildMinimal
+  minimal: buildMinimal
 };
+
+const LAYOUT_NAV_LINKS = {
+  studio: [
+    { id: 'about', label: 'About' },
+    { id: 'services', label: 'Skills' },
+    { id: 'resume', label: 'Resume' },
+    { id: 'projects', label: 'Projects' },
+    { id: 'contact', label: 'Contact' }
+  ],
+  creative: [
+    { id: 'projects', label: 'Work' },
+    { id: 'services', label: 'Expertise' },
+    { id: 'resume', label: 'Experience' },
+    { id: 'contact', label: 'Contact' }
+  ],
+  minimal: [
+    { id: 'top', label: 'Profile' },
+    { id: 'resume', label: 'Resume' },
+    { id: 'projects', label: 'Projects' },
+    { id: 'contact', label: 'Contact' }
+  ]
+};
+
+function resolveLayoutId(layoutId) {
+  if (layoutId === 'creative' || layoutId === 'split') return 'creative';
+  if (layoutId === 'minimal' || layoutId === 'magazine') return 'minimal';
+  return 'studio';
+}
 
 function globalStyles() {
   return `
@@ -429,9 +505,11 @@ function globalStyles() {
       --heading-letter-spacing: var(--heading-letter-spacing);
       --body-font-size: var(--body-font-size);
       --line-height: var(--line-height);
-      --hero-bg: var(--hero-bg);
-      --avatar-shape: var(--avatar-shape);
-      --accent-gradient: var(--accent-gradient);
+      --visual-hero-pattern: var(--hero-pattern);
+      --visual-body-pattern: var(--body-pattern);
+      --visual-section-pattern: var(--section-pattern);
+      --visual-animation-style: var(--animation-style);
+      --visual-section-divider: var(--section-divider);
     }
 
     * { box-sizing: border-box; }
@@ -444,6 +522,21 @@ function globalStyles() {
       font-size: var(--body-font-size);
       line-height: var(--line-height);
       -webkit-font-smoothing: antialiased;
+    }
+    .pattern-body-grid {
+      background-image: linear-gradient(var(--accent-soft) 1px, transparent 1px), linear-gradient(90deg, var(--accent-soft) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+    .pattern-body-dots {
+      background-image: radial-gradient(var(--accent-soft) 1px, transparent 1.5px);
+      background-size: 18px 18px;
+    }
+    .pattern-body-diagonal {
+      background-image: repeating-linear-gradient(135deg, transparent 0 22px, var(--accent-soft) 22px 23px);
+    }
+    .pattern-body-noise {
+      background-image: radial-gradient(var(--accent-soft) 0.8px, transparent 1px);
+      background-size: 7px 7px;
     }
     a { color: inherit; text-decoration: none; }
     img { max-width: 100%; display: block; }
@@ -532,25 +625,41 @@ function globalStyles() {
       transition: 0.2s;
     }
 
-    /* Hero */
+    /* Heroes */
     .site-hero {
       position: relative;
       overflow: hidden;
-      min-height: clamp(560px, 92vh, 860px);
-      display: flex;
-      align-items: center;
-      padding: 5rem 1.5rem 4rem;
+      padding: clamp(4rem, 9vw, 7rem) 1.5rem;
     }
-    .hero-inner {
-      width: 100%;
-      max-width: var(--max-width);
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2rem;
-      align-items: center;
-      position: relative;
-      z-index: 1;
+    .site-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .pattern-hero-mesh .site-hero::before {
+      background-image: radial-gradient(circle at 12% 18%, var(--accent-soft), transparent 34%), radial-gradient(circle at 86% 80%, var(--accent-soft), transparent 38%);
+      opacity: 0.7;
+    }
+    .pattern-hero-grid .site-hero::before {
+      background-image: linear-gradient(var(--accent-soft) 1px, transparent 1px), linear-gradient(90deg, var(--accent-soft) 1px, transparent 1px);
+      background-size: 44px 44px;
+      opacity: 0.42;
+    }
+    .pattern-hero-dots .site-hero::before {
+      background-image: radial-gradient(var(--accent) 1px, transparent 1.5px);
+      background-size: 18px 18px;
+      opacity: 0.18;
+    }
+    .pattern-hero-noise .site-hero::before {
+      background-image: radial-gradient(var(--accent-soft) 0.8px, transparent 1px);
+      background-size: 7px 7px;
+      opacity: 0.55;
+    }
+    .pattern-hero-diagonal .site-hero::before {
+      background-image: repeating-linear-gradient(135deg, transparent 0 26px, var(--accent-soft) 26px 28px);
+      opacity: 0.5;
     }
     .hero-eyebrow {
       text-transform: uppercase;
@@ -560,19 +669,18 @@ function globalStyles() {
       color: var(--accent);
       margin: 0 0 0.6rem;
     }
-    .hero-content h1, .hero-text h1, .hero-minimal h1 {
+    .studio-hero h1, .creative-hero h1, .minimal-hero h1 {
       font-family: var(--font-display);
       font-weight: var(--font-display-weight);
-      font-size: clamp(2.8rem, 7vw, 5rem);
-      line-height: 1.02;
-      margin: 0 0 0.22em;
+      line-height: 0.98;
+      margin: 0;
       color: var(--text);
     }
     .hero-title {
       font-size: clamp(1.15rem, 2.4vw, 1.55rem);
       color: var(--accent);
       font-weight: 500;
-      margin: 0 0 0.9rem;
+      margin: 0.75rem 0 0;
     }
     .hero-summary {
       color: var(--muted);
@@ -582,13 +690,7 @@ function globalStyles() {
     .hero-summary p { margin: 0 0 0.55em; }
     .hero-summary p:last-child { margin-bottom: 0; }
     .hero-actions { margin-top: 1.6rem; display: flex; gap: 0.75rem; flex-wrap: wrap; }
-
-    .hero-skills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-top: 1.25rem;
-    }
+    .hero-skills { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.25rem; }
     .hero-skill {
       display: inline-flex;
       align-items: center;
@@ -600,192 +702,127 @@ function globalStyles() {
       font-weight: 600;
       border: 1px solid var(--accent-soft);
     }
-    .hero-socials {
-      display: flex;
-      gap: 1rem;
-      margin-top: 1.4rem;
-      flex-wrap: wrap;
-    }
-    .hero-social {
-      font-size: 0.88rem;
-      font-weight: 500;
-      color: var(--muted);
-      position: relative;
-    }
+    .hero-skill-outline { background: transparent; border-color: var(--accent); }
+    .hero-skills-inline { display: block; color: var(--accent); font-size: 0.9rem; font-weight: 600; }
+    .hero-skill-inline { white-space: nowrap; }
+    .hero-socials { display: flex; gap: 1rem; margin-top: 1.4rem; flex-wrap: wrap; }
+    .hero-social { font-size: 0.88rem; font-weight: 500; color: var(--muted); }
     .hero-social:hover { color: var(--accent); }
-
-    .hero-visual {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: relative;
-      min-height: 360px;
-    }
-    .hero-visual-framed {
-      background: linear-gradient(145deg, var(--accent-soft), transparent 60%);
-      border-radius: 50%;
-      aspect-ratio: 1 / 1;
-      max-width: 420px;
-      margin: 0 auto;
-    }
-    .hero-visual-ring {
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      border: 2px dashed var(--accent-soft);
-      animation: slow-spin 24s linear infinite;
-    }
-    @keyframes slow-spin { to { transform: rotate(360deg); } }
 
     .avatar {
       object-fit: cover;
       border: 5px solid var(--accent-soft);
       box-shadow: 0 24px 60px rgba(0,0,0,0.16);
-      position: relative;
-      z-index: 2;
     }
     .avatar-circle { border-radius: 50%; }
     .avatar-rounded { border-radius: var(--radius); }
     .avatar-square { border-radius: 0; }
-
-    .hero-avatar-placeholder, .about-avatar-placeholder {
-      width: 280px;
-      height: 280px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: var(--font-display);
-      font-size: 7rem;
-      font-weight: var(--font-display-weight);
-      background: var(--accent-soft);
-      color: var(--accent);
-      border: 5px solid var(--accent-soft);
-      box-shadow: 0 24px 60px rgba(0,0,0,0.12);
+    /* Studio: profile panel and factual highlights */
+    .studio-hero { background: linear-gradient(135deg, var(--hero-bg), var(--bg)); }
+    .studio-hero-grid, .studio-highlights {
+      max-width: var(--max-width);
+      margin: 0 auto;
       position: relative;
-      z-index: 2;
+      z-index: 1;
     }
-
-    /* Studio hero */
-    .hero-studio {
-      background: linear-gradient(135deg, var(--hero-bg) 0%, var(--bg) 100%);
-    }
-    .hero-studio-glow {
-      position: absolute;
-      left: -10%;
-      top: -10%;
-      width: 55vw;
-      height: 55vw;
-      border-radius: 50%;
-      background: var(--accent-soft);
-      opacity: 0.35;
-      filter: blur(80px);
-      z-index: 0;
-    }
-    .hero-studio-blob {
-      position: absolute;
-      right: -5%;
-      bottom: -10%;
-      width: 45vw;
-      height: 45vw;
-      border-radius: 50%;
-      background: var(--accent-gradient);
-      opacity: 0.12;
-      filter: blur(60px);
-      z-index: 0;
-    }
-
-    /* Creative hero */
-    .hero-creative {
-      background: var(--hero-bg);
-    }
-    .hero-creative-bg {
-      position: absolute;
-      inset: 0;
-      background: var(--accent-gradient);
-      opacity: 0.1;
-      z-index: 0;
-    }
-    .hero-creative-shape {
-      position: absolute;
-      right: -12%;
-      top: -15%;
-      width: 70vw;
-      height: 70vw;
-      max-width: 900px;
-      max-height: 900px;
-      border-radius: 50%;
-      background: var(--accent-soft);
-      opacity: 0.35;
-      z-index: 0;
-    }
-    .hero-creative-dots {
-      position: absolute;
-      left: 4%;
-      bottom: 10%;
-      width: 120px;
-      height: 120px;
-      background-image: radial-gradient(var(--accent) 1.5px, transparent 1.5px);
-      background-size: 14px 14px;
-      opacity: 0.25;
-      z-index: 0;
-    }
-    .hero-creative .hero-content {
-      padding-right: 1rem;
-    }
-    .hero-creative .hero-visual-framed {
-      background: linear-gradient(135deg, var(--accent-soft), transparent 55%);
-    }
-
-    /* Minimal hero */
-    .hero-minimal {
-      background: var(--bg);
-      text-align: center;
-    }
-    .hero-minimal-glow {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      width: 70vw;
-      height: 70vw;
-      max-width: 800px;
-      max-height: 800px;
-      border-radius: 50%;
-      background: var(--accent-soft);
-      opacity: 0.25;
-      filter: blur(90px);
-      z-index: 0;
-    }
-    .hero-minimal .hero-inner {
-      grid-template-columns: 1fr;
-      max-width: 760px;
-    }
-    .hero-minimal-avatar {
-      position: relative;
-      display: inline-flex;
-      justify-content: center;
+    .studio-hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+      gap: clamp(2rem, 7vw, 6rem);
       align-items: center;
-      margin-bottom: 1.25rem;
     }
-    .hero-minimal .hero-visual-ring {
-      width: 240px;
-      height: 240px;
+    .studio-hero-grid--no-portrait { grid-template-columns: 1fr; }
+    .studio-hero-copy h1 { font-size: clamp(3.2rem, 7vw, 6.5rem); max-width: 10ch; }
+    .studio-hero-copy .hero-summary { margin-top: 1.5rem; }
+    .studio-portrait-panel {
+      background: var(--surface);
+      border: 1px solid var(--accent-soft);
+      box-shadow: 18px 18px 0 var(--accent-soft);
+      padding: 0.9rem;
     }
-    .hero-minimal .avatar, .hero-minimal .hero-avatar-placeholder {
-      width: 220px;
-      height: 220px;
-      margin: 0;
+    .studio-portrait { aspect-ratio: 4 / 5; overflow: hidden; background: var(--accent-soft); }
+    .studio-portrait .avatar, .studio-portrait .hero-avatar-placeholder {
+      width: 100% !important;
+      height: 100% !important;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
     }
-    .hero-minimal .hero-summary { margin: 0 auto; }
-    .hero-minimal .hero-actions { justify-content: center; }
-    .hero-minimal .hero-socials { justify-content: center; }
+    .studio-portrait-meta { display: flex; justify-content: space-between; gap: 1rem; padding-top: 0.9rem; color: var(--muted); font-size: 0.85rem; }
+    .studio-portrait-meta strong { color: var(--text); text-align: right; }
+    .studio-highlights {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      margin-top: clamp(2.5rem, 6vw, 5rem);
+      border-top: 1px solid var(--accent-soft);
+      border-bottom: 1px solid var(--accent-soft);
+    }
+    .studio-highlights div { display: flex; gap: 0.5rem; align-items: baseline; padding: 1rem 1.25rem; }
+    .studio-highlights div + div { border-left: 1px solid var(--accent-soft); }
+    .studio-highlights strong { font-family: var(--font-display); color: var(--accent); font-size: 1.65rem; }
+    .studio-highlights span { color: var(--muted); font-size: 0.85rem; }
+
+    /* Creative: typographic, work-led composition */
+    .creative-hero { background: var(--hero-bg); border-top: 1px solid var(--accent-soft); border-bottom: 1px solid var(--accent-soft); }
+    .creative-hero-grid {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(120px, 0.25fr) minmax(0, 1.2fr) minmax(240px, 0.55fr);
+      gap: 2rem;
+      align-items: end;
+      position: relative;
+      z-index: 1;
+    }
+    .creative-index { margin: 0; color: var(--accent); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; writing-mode: vertical-rl; transform: rotate(180deg); }
+    .creative-hero-title { border-top: 3px solid var(--accent); padding-top: 1.2rem; }
+    .creative-hero-title h1 { font-size: clamp(4rem, 11vw, 10rem); letter-spacing: -0.07em; overflow-wrap: anywhere; }
+    .creative-hero-notes { border-top: 1px solid var(--accent-soft); padding-top: 1.2rem; }
+    .creative-hero-notes .hero-actions { flex-direction: column; align-items: flex-start; }
+    .creative-hero-notes .cta-button { border-radius: 0; }
+
+    /* Minimal: text-only introduction */
+    .site-nav-minimal { position: relative; background: transparent; backdrop-filter: none; border-bottom: 0; }
+    .minimal-hero { background: var(--bg); border-bottom: 1px solid var(--accent-soft); }
+    .minimal-hero-copy { max-width: 760px; margin: 0 auto; position: relative; z-index: 1; }
+    .minimal-hero h1 { font-size: clamp(3rem, 8vw, 7rem); letter-spacing: -0.06em; }
+    .minimal-hero .hero-summary { margin-top: 1.5rem; }
+    .minimal-hero .hero-actions { margin-top: 2rem; }
+    .minimal-resume-inner { max-width: 820px; }
+    .minimal-resume-group { margin-top: 2.5rem; }
+    .minimal-resume-group > h3 { margin: 0; font-size: 0.8rem; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; }
+    .minimal-resume-row { display: flex; justify-content: space-between; gap: 1.5rem; padding: 1rem 0; border-bottom: 1px solid var(--accent-soft); }
+    .minimal-resume-row h3 { margin: 0; font-family: var(--font-display); font-size: 1.05rem; }
+    .minimal-resume-row p, .minimal-resume-row time { margin: 0.2rem 0 0; color: var(--muted); font-size: 0.9rem; }
+    .minimal-resume-row time { white-space: nowrap; }
+    .minimal-skills-list { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; list-style: none; padding: 1.5rem 0 0; margin: 2.5rem 0 0; border-top: 1px solid var(--accent-soft); color: var(--muted); }
+    .minimal-skills-list li::before { content: '•'; color: var(--accent); margin-right: 0.4rem; }
 
     /* Sections */
     .section {
       padding: clamp(3rem, 7vw, 5rem) 1.5rem;
     }
-    .section:nth-child(even) { background: var(--surface); }
+    .section:nth-child(even) { background-color: var(--surface); }
+    .pattern-section-grid .section:nth-child(even) {
+      background-image: linear-gradient(var(--accent-soft) 1px, transparent 1px), linear-gradient(90deg, var(--accent-soft) 1px, transparent 1px);
+      background-size: 38px 38px;
+    }
+    .pattern-section-mesh .section:nth-child(even) {
+      background-image: radial-gradient(circle at 10% 10%, var(--accent-soft), transparent 28%), radial-gradient(circle at 90% 85%, var(--accent-soft), transparent 30%);
+    }
+    .pattern-section-dots .section:nth-child(even) {
+      background-image: radial-gradient(var(--accent-soft) 1px, transparent 1.5px);
+      background-size: 18px 18px;
+    }
+    .pattern-section-noise .section:nth-child(even) {
+      background-image: radial-gradient(var(--accent-soft) 0.8px, transparent 1px);
+      background-size: 7px 7px;
+    }
+    .pattern-section-diagonal .section:nth-child(even) {
+      background-image: repeating-linear-gradient(135deg, transparent 0 24px, var(--accent-soft) 24px 25px);
+    }
+    .section-divider-line .section + .section { border-top: 1px solid var(--accent-soft); }
+    .section-divider-bar .section + .section { border-top: 3px solid var(--accent); }
     .section-inner {
       max-width: var(--max-width);
       margin: 0 auto;
@@ -822,14 +859,10 @@ function globalStyles() {
       gap: 3rem;
       align-items: center;
     }
+    .about-grid--no-visual { grid-template-columns: 1fr; }
     .about-visual {
       display: flex;
       justify-content: center;
-    }
-    .about-avatar-placeholder {
-      width: 200px;
-      height: 200px;
-      font-size: 5rem;
     }
     .about-content p { color: var(--muted); max-width: 60ch; }
     .about-content p + p { margin-top: 0.8em; }
@@ -960,7 +993,15 @@ function globalStyles() {
       display: flex;
       align-items: center;
       justify-content: center;
+      overflow: hidden;
     }
+    .project-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.35s ease;
+    }
+    .project-card:hover .project-image { transform: scale(1.05); }
     .project-initial {
       font-family: var(--font-display);
       font-size: 4rem;
@@ -1024,6 +1065,47 @@ function globalStyles() {
     }
     .site-footer p { margin: 0; font-size: 0.9rem; opacity: 0.8; }
 
+    @keyframes hero-float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+    @keyframes card-rise {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animation-float .studio-portrait-panel { animation: hero-float 6s ease-in-out infinite; }
+    .animation-float .creative-index { animation: hero-float 8s ease-in-out infinite reverse; }
+    .has-reveal .section {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+    .has-reveal .section.is-visible { opacity: 1; transform: translateY(0); }
+    .has-reveal .section.is-visible .service-card,
+    .has-reveal .section.is-visible .edu-card,
+    .has-reveal .section.is-visible .project-card,
+    .has-reveal .section.is-visible .contact-card {
+      animation: card-rise 0.5s both;
+    }
+    .has-reveal .section.is-visible .service-card:nth-child(2),
+    .has-reveal .section.is-visible .edu-card:nth-child(2),
+    .has-reveal .section.is-visible .project-card:nth-child(2),
+    .has-reveal .section.is-visible .contact-card:nth-child(2) { animation-delay: 0.08s; }
+    .has-reveal .section.is-visible .service-card:nth-child(3),
+    .has-reveal .section.is-visible .edu-card:nth-child(3),
+    .has-reveal .section.is-visible .project-card:nth-child(3),
+    .has-reveal .section.is-visible .contact-card:nth-child(3) { animation-delay: 0.16s; }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      .has-reveal .section { opacity: 1; transform: none; }
+    }
+
     @media (max-width: 760px) {
       .nav-links {
         display: none;
@@ -1039,36 +1121,55 @@ function globalStyles() {
       }
       .nav-open .nav-links { display: flex; }
       .nav-toggle { display: flex; }
-      .site-hero { min-height: auto; padding: 4.5rem 1.25rem 2rem; }
-      .hero-inner { grid-template-columns: 1fr; gap: 1rem; }
-      .hero-visual { min-height: auto; order: -1; padding: 0.25rem 0; }
-      .hero-visual-framed { max-width: 180px; }
-      .hero-visual-ring { display: none; }
-      .hero-visual .avatar, .hero-minimal .avatar {
-        width: 140px !important;
-        height: 140px !important;
-      }
-      .hero-avatar-placeholder, .about-avatar-placeholder {
-        width: 140px;
-        height: 140px;
-        font-size: 3.5rem;
-      }
+      .site-hero { padding: 3.5rem 1.25rem; }
       .hero-eyebrow { margin-bottom: 0.4rem; }
-      .hero-content h1, .hero-text h1, .hero-minimal h1 { font-size: clamp(2.2rem, 9vw, 2.8rem); }
       .hero-title { margin-bottom: 0.6rem; }
       .hero-summary { font-size: 0.95rem; max-width: 46ch; }
       .hero-skills { margin-top: 0.9rem; }
       .hero-actions { margin-top: 1.1rem; }
       .hero-socials { margin-top: 1rem; }
-      .hero-creative .hero-content { padding-right: 0; }
-      .hero-creative-shape { display: none; }
+      .studio-hero-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+      .studio-hero-copy h1 { font-size: clamp(2.8rem, 14vw, 4.4rem); }
+      .studio-portrait-panel { max-width: 320px; }
+      .studio-highlights { margin-top: 3rem; }
+      .studio-highlights div { padding: 0.8rem 0.6rem; flex-direction: column; gap: 0; }
+      .studio-highlights strong { font-size: 1.35rem; }
+      .creative-hero-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+      .creative-index { writing-mode: initial; transform: none; }
+      .creative-hero-title h1 { font-size: clamp(3.4rem, 18vw, 6.5rem); }
+      .creative-hero-notes .hero-actions { flex-direction: row; }
+      .minimal-hero h1 { font-size: clamp(2.8rem, 14vw, 4.8rem); }
+      .minimal-resume-row { flex-direction: column; gap: 0.25rem; }
+      .minimal-resume-row time { margin: 0; }
       .about-grid { grid-template-columns: 1fr; gap: 2rem; }
-      .hero-actions { justify-content: center; }
-      .hero-socials { justify-content: center; }
-      .hero-minimal-avatar { margin-bottom: 0.5rem; }
-      .hero-minimal .avatar, .hero-minimal .hero-avatar-placeholder { width: 130px !important; height: 130px !important; }
     }
   `;
+}
+
+function visualClass(prefix, value, allowed, fallback) {
+  return `${prefix}${allowed.has(value) ? value : fallback}`;
+}
+
+function interactionScript() {
+  return `<script>
+    (() => {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return;
+
+      const sections = document.querySelectorAll('.section');
+      if (!sections.length) return;
+
+      document.body.classList.add('has-reveal');
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        });
+      }, { threshold: 0.1, rootMargin: '0px 0px -40px' });
+
+      sections.forEach((section) => observer.observe(section));
+    })();
+  </script>`;
 }
 
 export function renderPortfolio(resume, layoutId, presetId) {
@@ -1077,9 +1178,20 @@ export function renderPortfolio(resume, layoutId, presetId) {
   const tokenVars = Object.entries(tokens)
     .map(([k, v]) => `--${k.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${v};`)
     .join('\n      ');
+  const activeLayoutId = resolveLayoutId(layoutId);
+  const patterns = new Set(['none', 'mesh', 'grid', 'dots', 'noise', 'diagonal']);
+  const bodyClasses = [
+    `layout-${activeLayoutId}`,
+    visualClass('pattern-hero-', tokens.heroPattern, patterns, 'none'),
+    visualClass('pattern-body-', tokens.bodyPattern, patterns, 'none'),
+    visualClass('pattern-section-', tokens.sectionPattern, patterns, 'none'),
+    visualClass('animation-', tokens.animationStyle, new Set(['subtle', 'float']), 'subtle'),
+    visualClass('section-divider-', tokens.sectionDivider, new Set(['none', 'line', 'bar']), 'none')
+  ].join(' ');
 
-  const builder = LAYOUT_BUILDERS[layoutId] || buildStudio;
-  const bodyInner = navHtml(resume) + builder(resume);
+  const builder = LAYOUT_BUILDERS[activeLayoutId];
+  const navVariant = activeLayoutId === 'minimal' ? 'site-nav-minimal' : '';
+  const bodyInner = navHtml(resume, LAYOUT_NAV_LINKS[activeLayoutId], navVariant) + builder(resume, preset);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -1098,8 +1210,9 @@ export function renderPortfolio(resume, layoutId, presetId) {
     ${globalStyles()}
   </style>
 </head>
-<body class="layout-${layoutId}">
+<body class="${bodyClasses}">
   ${bodyInner}
+  ${interactionScript()}
 </body>
 </html>`;
 }

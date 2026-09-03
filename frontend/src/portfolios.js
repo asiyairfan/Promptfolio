@@ -32,20 +32,34 @@ export function renderPortfolios(state, dispatch) {
 }
 
 function renderPortfolioCard(portfolio, onChange) {
+  const errorText = el('p', { class: 'portfolio-delete-error', hidden: true });
+  let deleteButton;
+
   async function remove() {
-    if (!confirm('Delete this portfolio?')) return;
+    if (!confirm('Delete this portfolio and its hosted site?')) return;
+
+    deleteButton.disabled = true;
+    deleteButton.textContent = 'Deleting…';
+    errorText.hidden = true;
+
     try {
       await deletePortfolio(portfolio.slug);
       onChange();
     } catch (err) {
-      alert(err.message);
+      errorText.textContent = err.message;
+      errorText.hidden = false;
+      deleteButton.disabled = false;
+      deleteButton.textContent = 'Delete';
     }
   }
+
+  deleteButton = el('button', { class: 'btn btn-danger', onclick: remove }, 'Delete');
 
   return el('div', { class: 'portfolio-card' }, [
     el('div', { class: 'portfolio-meta' }, [
       el('h3', {}, portfolio.slug),
       el('span', { class: 'portfolio-theme' }, `${portfolio.layout} · ${portfolio.preset}`),
+      errorText,
     ]),
     el('div', { class: 'portfolio-actions' }, [
       el('a', {
@@ -54,7 +68,7 @@ function renderPortfolioCard(portfolio, onChange) {
         target: '_blank',
         rel: 'noopener',
       }, 'Open'),
-      el('button', { class: 'btn btn-danger', onclick: remove }, 'Delete'),
+      deleteButton,
     ]),
   ]);
 }

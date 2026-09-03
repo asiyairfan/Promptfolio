@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { coerceResume } from '../../shared/resume-schema.js';
 import { renderPortfolio } from '../../shared/render.js';
 import { getLayout } from '../../shared/style-presets.js';
-import { deploy } from '../services/deploy/index.js';
+import { deploy, destroyDeployment } from '../services/deploy/index.js';
 import { requireAuth } from '../lib/auth.js';
 import { supabase } from '../lib/supabase.js';
 
@@ -46,11 +46,20 @@ router.post('/', requireAuth, async (req, res, next) => {
         layout: safeLayout,
         preset,
         published_url: deployed.url,
+        deploy_provider: deployed.provider,
+        deploy_project_id: deployed.projectId || null,
+        deploy_project_name: deployed.projectName || null,
+        deployment_id: deployed.deploymentId || null,
       });
 
     if (dbError) {
       console.error('Failed to save portfolio record:', dbError);
-      return res.status(500).json({ error: { code: 'db_error', message: 'Published but failed to save record.' } });
+      try {
+        await destroyDeployment(deployed);
+      } catch (cleanupError) {
+        console.error('Failed to clean up unpublished deployment:', cleanupError);
+      }
+      return res.status(500).json({ error: { code: 'db_error', message: 'Could not save the portfolio record. The deployment cleanup was attempted.' } });
     }
 
     res.json({

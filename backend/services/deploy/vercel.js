@@ -6,6 +6,14 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function vercelError(message, status, data) {
+  const error = new Error(message);
+  error.status = status;
+  error.code = 'vercel_error';
+  error.data = data;
+  return error;
+}
+
 async function vercelFetch(path, options = {}) {
   const token = process.env.VERCEL_TOKEN;
   const teamId = process.env.VERCEL_TEAM_ID;
@@ -31,10 +39,33 @@ async function vercelFetch(path, options = {}) {
   }
 
   if (!res.ok) {
-    const msg = data?.error?.message || data?.message || text || `HTTP ${res.status}`;
-    throw new Error(msg);
+    const message = data?.error?.message || data?.message
+      || (text.trimStart().startsWith('<')
+        ? `Vercel returned an unexpected HTML response (HTTP ${res.status}).`
+        : text || `Vercel request failed (HTTP ${res.status}).`);
+    throw vercelError(message, res.status, data);
   }
   return data;
+}
+
+export async function deleteVercelDeployment({ projectId, projectName, deploymentId }) {
+  const projectIdentifier = projectId || projectName;
+
+  if (!projectIdentifier && !deploymentId) {
+    throw vercelError('Vercel deployment metadata is missing.', 409);
+  }
+
+  try {
+    if (projectIdentifier) {
+      await vercelFetch(`/v9/projects/${encodeURIComponent(projectIdentifier)}`, { method: 'DELETE' });
+      return;
+    }
+
+    await vercelFetch(`/v13/deployments/${encodeURIComponent(deploymentId)}`, { method: 'DELETE' });
+  } catch (err) {
+    if (err.status === 404) return;
+    throw err;
+  }
 }
 
 export async function deployToVercel(html) {
@@ -56,18 +87,24 @@ export async function deployToVercel(html) {
   });
 
   const id = deployment.id;
-  if (!id) throw new Error('Vercel did not return a deployment id');
+  if (!id) throw vercelError('Vercel did not return a deployment id.', 502);
 
   const projectId = deployment.projectId || deployment.project?.id;
-  if (projectId) {
+  const projectName = deployment.project?.name || deployment.name || name;
+  const projectIdentifier = projectId || projectName;
+
+  try {
+    await vercelFetch(`/v9/projects/${encodeURIComponent(projectIdentifier)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ ssoProtection: null })
+    });
+  } catch (err) {
     try {
-      await vercelFetch(`/v9/projects/${projectId}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ ssoProtection: null })
-      });
-    } catch (err) {
-      console.warn('Could not disable Vercel SSO protection:', err.message);
+      await deleteVercelDeployment({ projectId, projectName, deploymentId: id });
+    } catch (cleanupError) {
+      console.error('Could not clean up Vercel deployment after SSO configuration failed:', cleanupError.message);
     }
+    throw err;
   }
 
   const deadline = Date.now() + MAX_POLL_SECONDS * 1000;
@@ -77,14 +114,16 @@ export async function deployToVercel(html) {
       return {
         url: `https://${status.url}`,
         provider: 'vercel',
-        deploymentId: id
+        deploymentId: id,
+        projectId: status.projectId || status.project?.id || projectId,
+        projectName: status.project?.name || status.name || projectName
       };
     }
     if (status.readyState === 'ERROR') {
-      throw new Error(status.error?.message || 'Vercel deployment failed');
+      throw vercelError(status.error?.message || 'Vercel deployment failed.', 502, status.error);
     }
     await sleep(POLL_INTERVAL_MS);
   }
 
-  throw new Error('Vercel deployment timed out');
+  throw vercelError('Vercel deployment timed out.', 504);
 }

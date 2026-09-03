@@ -47,7 +47,8 @@ export const RESUME_SCHEMA = {
         properties: {
           name: { type: "string" },
           description: { type: "string" },
-          link: { type: "string" }
+          link: { type: "string" },
+          imageUrl: { type: "string" }
         }
       }
     }
@@ -136,7 +137,8 @@ export function coerceResume(raw) {
     return {
       name: ensureString(item.name),
       description: ensureString(item.description),
-      link: ensureString(item.link)
+      link: ensureString(item.link),
+      imageUrl: ensureString(item.imageUrl)
     };
   }).filter(Boolean);
 

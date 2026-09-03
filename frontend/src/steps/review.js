@@ -98,12 +98,13 @@ export function renderReview(state, dispatch) {
     listEditor(
       resume.projects,
       'projects',
-      () => ({ name: '', description: '', link: '' }),
+      () => ({ name: '', description: '', link: '', imageUrl: '' }),
       (item, onChange) => [
         inputRow([
           textField('Project name', item.name, (v) => onChange({ ...item, name: v })),
           textField('Link', item.link, (v) => onChange({ ...item, link: v })),
         ]),
+        imageField(item.imageUrl || '', (v) => onChange({ ...item, imageUrl: v })),
         textareaField('Description', item.description, (v) => onChange({ ...item, description: v })),
       ]
     ),
@@ -227,6 +228,97 @@ function textField(label, value, onChange) {
     el('label', {}, label),
     input,
   ]);
+}
+
+function imageField(value, onChange) {
+  const isDataUri = /^data:image\/(jpeg|png);base64,/i.test(value || '');
+  const valid = !value || isValidImageUrl(value);
+  const hint = valid
+    ? 'Paste a public image URL or upload a JPEG/PNG file.'
+    : 'Use a complete public http(s) URL or upload a JPEG/PNG file.';
+
+  let inputOrPreview;
+  if (isDataUri) {
+    inputOrPreview = el('div', { class: 'image-upload-preview' }, [
+      el('img', { src: value, alt: 'Project preview' }),
+      el('button', {
+        class: 'btn btn-secondary btn-sm',
+        onclick: () => onChange(''),
+      }, 'Remove image'),
+    ]);
+  } else {
+    inputOrPreview = el('input', {
+      type: 'url',
+      inputmode: 'url',
+      value,
+      placeholder: 'https://example.com/project-preview.jpg',
+      class: valid ? '' : 'input-invalid',
+      'aria-invalid': !valid || undefined,
+      oninput: (e) => onChange(e.target.value),
+    });
+  }
+
+  const fileInput = el('input', {
+    type: 'file',
+    accept: 'image/jpeg,image/png',
+    class: 'image-file-input',
+    onchange: async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      e.target.value = '';
+      if (file.size > 5 * 1024 * 1024) {
+        window.alert('Image must be smaller than 5 MB.');
+        return;
+      }
+      try {
+        const dataUri = await downscaleImage(file);
+        onChange(dataUri);
+      } catch {
+        window.alert('Could not process the image. Try a JPEG or PNG under 5 MB.');
+      }
+    },
+  });
+
+  return el('div', { class: 'form-group' }, [
+    el('label', {}, 'Project image (optional)'),
+    inputOrPreview,
+    fileInput,
+    el('p', { class: valid ? 'field-hint' : 'field-hint field-hint-error' }, hint),
+  ]);
+}
+
+function isValidImageUrl(value) {
+  if (!value) return true;
+  if (/^data:image\/(jpeg|png);base64,/i.test(value)) return true;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+function downscaleImage(file, maxWidth = 1200, quality = 0.85) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const scale = Math.min(1, maxWidth / img.width);
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const mime = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+        resolve(canvas.toDataURL(mime, quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 function textareaField(label, value, onChange) {

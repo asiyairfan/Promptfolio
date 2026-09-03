@@ -2,17 +2,17 @@ export const LAYOUTS = {
   studio: {
     id: "studio",
     label: "Studio",
-    description: "Modern single-page portfolio with sticky nav, hero, and card sections."
+    description: "Professional portfolio with a portrait panel, highlight strip, and detailed sections."
   },
   creative: {
     id: "creative",
     label: "Creative",
-    description: "Bold split hero with decorative shapes and high-contrast typography."
+    description: "Work-first editorial layout with poster typography and ruled content blocks."
   },
   minimal: {
     id: "minimal",
     label: "Minimal",
-    description: "Centered, airy layout with generous whitespace and elegant type."
+    description: "Text-only introduction with a concise resume list and restrained navigation."
   }
 };
 
@@ -27,7 +27,11 @@ const BASE_TOKENS = {
   skillStyle: "chip",
   heroBg: "#ffffff",
   avatarShape: "circle",
-  accentGradient: "linear-gradient(135deg, var(--color-accent), transparent)"
+  accentGradient: "linear-gradient(135deg, var(--color-accent), transparent)",
+  heroPattern: "none",
+  bodyPattern: "none",
+  sectionPattern: "none",
+  animationStyle: "subtle"
 };
 
 function tokens(base, overrides = {}) {
@@ -53,7 +57,7 @@ export const PRESETS = {
       radius: "0px",
       spacing: "1.35rem",
       maxWidth: "1040px"
-    }, { headingLetterSpacing: "0.06em", avatarShape: "rounded" })
+    }, { headingLetterSpacing: "0.06em", avatarShape: "rounded", heroPattern: "mesh" })
   },
   modern: {
     id: "modern",
@@ -73,7 +77,7 @@ export const PRESETS = {
       radius: "12px",
       spacing: "1.25rem",
       maxWidth: "1100px"
-    }, { headingTransform: "none", fontDisplayWeight: "700", headingLetterSpacing: "0.02em", heroStyle: "banner", sectionDivider: "bar", heroBg: "#f5f7ff" })
+    }, { headingTransform: "none", fontDisplayWeight: "700", headingLetterSpacing: "0.02em", heroStyle: "banner", sectionDivider: "bar", heroBg: "#f5f7ff", heroPattern: "grid" })
   },
   bold: {
     id: "bold",
@@ -93,7 +97,7 @@ export const PRESETS = {
       radius: "12px",
       spacing: "1.4rem",
       maxWidth: "1120px"
-    }, { fontDisplayWeight: "700", headingLetterSpacing: "0.08em", bodyFontSize: "1.05rem", lineHeight: "1.45", heroStyle: "split", sectionDivider: "none", skillStyle: "outline", heroBg: "#1a1a1d", avatarShape: "square", accentGradient: "linear-gradient(135deg, #f59e0b, #ef4444)" })
+    }, { fontDisplayWeight: "700", headingLetterSpacing: "0.08em", bodyFontSize: "1.05rem", lineHeight: "1.45", heroStyle: "split", sectionDivider: "none", skillStyle: "outline", heroBg: "#1a1a1d", avatarShape: "square", accentGradient: "linear-gradient(135deg, #f59e0b, #ef4444)", heroPattern: "diagonal", sectionPattern: "diagonal", animationStyle: "float" })
   },
   warm: {
     id: "warm",
@@ -113,7 +117,7 @@ export const PRESETS = {
       radius: "8px",
       spacing: "1.3rem",
       maxWidth: "1080px"
-    }, { headingTransform: "none", fontDisplayWeight: "600", headingLetterSpacing: "0.03em", lineHeight: "1.65", heroStyle: "centered", sectionDivider: "line", skillStyle: "chip", heroBg: "#fffaf5", avatarShape: "circle" })
+    }, { headingTransform: "none", fontDisplayWeight: "600", headingLetterSpacing: "0.03em", lineHeight: "1.65", heroStyle: "centered", sectionDivider: "line", skillStyle: "chip", heroBg: "#fffaf5", avatarShape: "circle", heroPattern: "noise", sectionPattern: "noise" })
   },
   mint: {
     id: "mint",
@@ -133,7 +137,7 @@ export const PRESETS = {
       radius: "10px",
       spacing: "1.25rem",
       maxWidth: "1100px"
-    }, { fontDisplayWeight: "700", headingLetterSpacing: "0.05em", bodyFontSize: "0.95rem", heroStyle: "banner", sectionDivider: "bar", heroBg: "#14261D", avatarShape: "circle" })
+    }, { fontDisplayWeight: "700", headingLetterSpacing: "0.05em", bodyFontSize: "0.95rem", heroStyle: "banner", sectionDivider: "bar", heroBg: "#14261D", avatarShape: "circle", heroPattern: "grid", bodyPattern: "grid" })
   },
   editorial: {
     id: "editorial",
@@ -153,7 +157,7 @@ export const PRESETS = {
       radius: "6px",
       spacing: "1.4rem",
       maxWidth: "960px"
-    }, { headingTransform: "none", fontDisplayWeight: "700", headingLetterSpacing: "0.01em", bodyFontSize: "1.05rem", lineHeight: "1.7", heroStyle: "centered", sectionDivider: "none", skillStyle: "outline", heroBg: "#FDFCF8", avatarShape: "none" })
+    }, { headingTransform: "none", fontDisplayWeight: "700", headingLetterSpacing: "0.01em", bodyFontSize: "1.05rem", lineHeight: "1.7", heroStyle: "centered", sectionDivider: "none", skillStyle: "outline", heroBg: "#FDFCF8", avatarShape: "none", heroPattern: "noise" })
   },
   terminal: {
     id: "terminal",
@@ -173,7 +177,7 @@ export const PRESETS = {
       radius: "0px",
       spacing: "1.25rem",
       maxWidth: "1060px"
-    }, { fontDisplayWeight: "700", headingLetterSpacing: "0.08em", bodyFontSize: "0.95rem", lineHeight: "1.55", heroStyle: "plain", sectionDivider: "line", skillStyle: "inline", heroBg: "#0c0c0c", avatarShape: "none" })
+    }, { fontDisplayWeight: "700", headingLetterSpacing: "0.08em", bodyFontSize: "0.95rem", lineHeight: "1.55", heroStyle: "plain", sectionDivider: "line", skillStyle: "inline", heroBg: "#0c0c0c", avatarShape: "none", heroPattern: "dots", bodyPattern: "grid" })
   },
   pastel: {
     id: "pastel",
@@ -193,7 +197,7 @@ export const PRESETS = {
       radius: "22px",
       spacing: "1.3rem",
       maxWidth: "1100px"
-    }, { headingTransform: "none", fontDisplayWeight: "700", headingLetterSpacing: "0.02em", lineHeight: "1.6", heroStyle: "banner", sectionDivider: "none", skillStyle: "chip", heroBg: "#FFEAEE", avatarShape: "circle" })
+    }, { headingTransform: "none", fontDisplayWeight: "700", headingLetterSpacing: "0.02em", lineHeight: "1.6", heroStyle: "banner", sectionDivider: "none", skillStyle: "chip", heroBg: "#FFEAEE", avatarShape: "circle", heroPattern: "mesh", sectionPattern: "mesh", animationStyle: "float" })
   },
   slate: {
     id: "slate",
@@ -213,7 +217,7 @@ export const PRESETS = {
       radius: "6px",
       spacing: "1.15rem",
       maxWidth: "1100px"
-    }, { fontDisplayWeight: "800", headingLetterSpacing: "0.1em", bodyFontSize: "0.95rem", lineHeight: "1.45", heroStyle: "plain", sectionDivider: "bar", skillStyle: "outline", heroBg: "#f1f5f9", avatarShape: "rounded" })
+    }, { fontDisplayWeight: "800", headingLetterSpacing: "0.1em", bodyFontSize: "0.95rem", lineHeight: "1.45", heroStyle: "plain", sectionDivider: "bar", skillStyle: "outline", heroBg: "#f1f5f9", avatarShape: "rounded", heroPattern: "grid" })
   }
 };
 

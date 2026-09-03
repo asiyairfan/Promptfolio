@@ -1,4 +1,4 @@
-import { writeFile, mkdir } from 'node:fs/promises';
+import { writeFile, mkdir, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import crypto from 'node:crypto';
@@ -6,17 +6,35 @@ import crypto from 'node:crypto';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLISHED_DIR = path.join(__dirname, '..', '..', 'published');
 
-export async function deployLocal(html, meta = {}) {
+function localDeploymentDir(deploymentId) {
+  const dir = path.resolve(PUBLISHED_DIR, deploymentId);
+  const root = `${path.resolve(PUBLISHED_DIR)}${path.sep}`;
+
+  if (!deploymentId || !dir.startsWith(root)) {
+    const error = new Error('Invalid local deployment id.');
+    error.code = 'invalid_deployment_id';
+    error.status = 400;
+    throw error;
+  }
+
+  return dir;
+}
+
+export async function deployLocal(html) {
   const id = crypto.randomUUID();
-  const dir = path.join(PUBLISHED_DIR, id);
+  const dir = localDeploymentDir(id);
   await mkdir(dir, { recursive: true });
   await writeFile(path.join(dir, 'index.html'), html, 'utf-8');
 
-  const publicBase = process.env.PUBLIC_BASE_URL || 'http://localhost:3001';
+  const publicBase = process.env.PUBLIC_BASE_URL || 'http://localhost:3003';
   return {
     url: `${publicBase}/p/${id}`,
     provider: 'local',
     deploymentId: id,
-    note: meta.note || 'Local fallback URL — only reachable from this machine.'
+    note: 'Local development URL — only reachable from this machine.'
   };
+}
+
+export async function deleteLocal(deploymentId) {
+  await rm(localDeploymentDir(deploymentId), { recursive: true, force: true });
 }
