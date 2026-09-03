@@ -73,31 +73,69 @@ function ctaHtml(text = 'Get in touch', href = '#contact') {
   return `<a class="cta-button" href="${escapeHtml(link)}">${escapeHtml(text)}</a>`;
 }
 
+function skillChipsHtml(skills, limit = 6) {
+  if (!skills || skills.length === 0) return '';
+  const chips = skills.slice(0, limit).map((s) => `<span class="hero-skill">${escapeHtml(s)}</span>`).join('');
+  return `<div class="hero-skills">${chips}</div>`;
+}
+
+function socialLinksHtml(contact) {
+  const website = safeUrl(contact?.website);
+  const links = [];
+  if (website) {
+    const lower = contact.website.toLowerCase();
+    if (lower.includes('github.com')) links.push({ label: 'GitHub', href: website });
+    if (lower.includes('linkedin.com')) links.push({ label: 'LinkedIn', href: website });
+    if (lower.includes('twitter.com') || lower.includes('x.com')) links.push({ label: 'Twitter', href: website });
+    if (links.length === 0) links.push({ label: 'Website', href: website });
+  }
+  if (contact?.email) {
+    links.push({ label: 'Email', href: `mailto:${escapeHtml(contact.email)}` });
+  }
+  if (links.length === 0) return '';
+  const items = links
+    .map((l) => `<a class="hero-social" href="${escapeHtml(l.href)}"${l.href.startsWith('http') ? ' target="_blank" rel="noopener"' : ''}>${escapeHtml(l.label)}</a>`)
+    .join('');
+  return `<div class="hero-socials">${items}</div>`;
+}
+
+function heroAvatarHtml(contact, name, size = '280px') {
+  const avatar = avatarHtml(contact.avatarUrl, getPreset().tokens.avatarShape, size);
+  if (avatar) return avatar;
+  const initial = escapeHtml((name || 'P').charAt(0));
+  return `<div class="hero-avatar-placeholder">${initial}</div>`;
+}
+
 function heroHtml(resume, layout) {
   const c = resume.contact || {};
   const name = escapeHtml(resume.name || 'Your Name');
   const title = escapeHtml(resume.title || '');
   const summary = resume.summary ? joinLines(resume.summary) : '';
-  const avatar = avatarHtml(c.avatarUrl, getPreset().tokens.avatarShape, '140px');
+  const skills = skillChipsHtml(resume.skills, 6);
+  const socials = socialLinksHtml(c);
 
   if (layout === 'creative') {
     return `
       <header class="site-hero hero-creative" id="top">
         <div class="hero-creative-bg"></div>
         <div class="hero-creative-shape"></div>
+        <div class="hero-creative-dots"></div>
         <div class="hero-inner">
           <div class="hero-content">
             <p class="hero-eyebrow">Hello, I'm</p>
             <h1>${name}</h1>
             ${title ? `<p class="hero-title">${title}</p>` : ''}
             ${summary ? `<div class="hero-summary">${summary}</div>` : ''}
+            ${skills}
             <div class="hero-actions">
               ${ctaHtml('View my work', '#projects')}
               ${ctaHtml('Contact me', '#contact')}
             </div>
+            ${socials}
           </div>
-          <div class="hero-visual">
-            ${avatar || `<div class="hero-avatar-placeholder">${name.charAt(0)}</div>`}
+          <div class="hero-visual hero-visual-framed">
+            <div class="hero-visual-ring"></div>
+            ${heroAvatarHtml(c, name, '320px')}
           </div>
         </div>
       </header>
@@ -107,12 +145,22 @@ function heroHtml(resume, layout) {
   if (layout === 'minimal') {
     return `
       <header class="site-hero hero-minimal" id="top">
+        <div class="hero-minimal-glow"></div>
         <div class="hero-inner">
-          ${avatar || `<div class="hero-avatar-placeholder">${name.charAt(0)}</div>`}
+          <div class="hero-minimal-avatar">
+            <div class="hero-visual-ring"></div>
+            ${heroAvatarHtml(c, name, '220px')}
+          </div>
+          <p class="hero-eyebrow">Hello, I'm</p>
           <h1>${name}</h1>
           ${title ? `<p class="hero-title">${title}</p>` : ''}
           ${summary ? `<div class="hero-summary">${summary}</div>` : ''}
-          <div class="hero-actions">${ctaHtml('Get in touch', '#contact')}</div>
+          ${skills}
+          <div class="hero-actions">
+            ${ctaHtml('View my work', '#projects')}
+            ${ctaHtml('Contact me', '#contact')}
+          </div>
+          ${socials}
         </div>
       </header>
     `;
@@ -121,16 +169,24 @@ function heroHtml(resume, layout) {
   // studio default
   return `
     <header class="site-hero hero-studio" id="top">
+      <div class="hero-studio-glow"></div>
+      <div class="hero-studio-blob"></div>
       <div class="hero-inner">
         <div class="hero-text">
-          <p class="hero-eyebrow">Portfolio</p>
+          <p class="hero-eyebrow">Hello, I'm</p>
           <h1>${name}</h1>
           ${title ? `<p class="hero-title">${title}</p>` : ''}
           ${summary ? `<div class="hero-summary">${summary}</div>` : ''}
-          <div class="hero-actions">${ctaHtml('View my work', '#projects')}</div>
+          ${skills}
+          <div class="hero-actions">
+            ${ctaHtml('View my work', '#projects')}
+            ${ctaHtml('Contact me', '#contact')}
+          </div>
+          ${socials}
         </div>
-        <div class="hero-visual">
-          ${avatar || `<div class="hero-avatar-placeholder">${name.charAt(0)}</div>`}
+        <div class="hero-visual hero-visual-framed">
+          <div class="hero-visual-ring"></div>
+          ${heroAvatarHtml(c, name, '320px')}
         </div>
       </div>
     </header>
@@ -480,52 +536,111 @@ function globalStyles() {
     .site-hero {
       position: relative;
       overflow: hidden;
-      padding: clamp(3rem, 8vw, 6rem) 1.5rem;
+      min-height: clamp(560px, 92vh, 860px);
+      display: flex;
+      align-items: center;
+      padding: 5rem 1.5rem 4rem;
     }
     .hero-inner {
+      width: 100%;
       max-width: var(--max-width);
       margin: 0 auto;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 3rem;
+      gap: 2rem;
       align-items: center;
+      position: relative;
+      z-index: 1;
     }
     .hero-eyebrow {
       text-transform: uppercase;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.14em;
       font-size: 0.8rem;
       font-weight: 600;
       color: var(--accent);
-      margin: 0 0 0.75rem;
+      margin: 0 0 0.6rem;
     }
     .hero-content h1, .hero-text h1, .hero-minimal h1 {
       font-family: var(--font-display);
       font-weight: var(--font-display-weight);
-      font-size: clamp(2.6rem, 6vw, 4.5rem);
-      line-height: 1.05;
-      margin: 0 0 0.25em;
+      font-size: clamp(2.8rem, 7vw, 5rem);
+      line-height: 1.02;
+      margin: 0 0 0.22em;
       color: var(--text);
     }
     .hero-title {
-      font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+      font-size: clamp(1.15rem, 2.4vw, 1.55rem);
       color: var(--accent);
       font-weight: 500;
-      margin: 0 0 1rem;
+      margin: 0 0 0.9rem;
     }
-    .hero-summary { color: var(--muted); max-width: 54ch; }
-    .hero-summary p { margin: 0 0 0.6em; }
-    .hero-actions { margin-top: 1.75rem; display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .hero-summary {
+      color: var(--muted);
+      max-width: 52ch;
+      font-size: clamp(1rem, 1.5vw, 1.15rem);
+    }
+    .hero-summary p { margin: 0 0 0.55em; }
+    .hero-summary p:last-child { margin-bottom: 0; }
+    .hero-actions { margin-top: 1.6rem; display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+    .hero-skills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1.25rem;
+    }
+    .hero-skill {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.35rem 0.85rem;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 600;
+      border: 1px solid var(--accent-soft);
+    }
+    .hero-socials {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.4rem;
+      flex-wrap: wrap;
+    }
+    .hero-social {
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--muted);
+      position: relative;
+    }
+    .hero-social:hover { color: var(--accent); }
 
     .hero-visual {
       display: flex;
       justify-content: center;
       align-items: center;
       position: relative;
+      min-height: 360px;
     }
+    .hero-visual-framed {
+      background: linear-gradient(145deg, var(--accent-soft), transparent 60%);
+      border-radius: 50%;
+      aspect-ratio: 1 / 1;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+    .hero-visual-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px dashed var(--accent-soft);
+      animation: slow-spin 24s linear infinite;
+    }
+    @keyframes slow-spin { to { transform: rotate(360deg); } }
+
     .avatar {
       object-fit: cover;
-      border: 4px solid var(--accent-soft);
-      box-shadow: 0 20px 50px rgba(0,0,0,0.12);
+      border: 5px solid var(--accent-soft);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.16);
       position: relative;
       z-index: 2;
     }
@@ -534,96 +649,137 @@ function globalStyles() {
     .avatar-square { border-radius: 0; }
 
     .hero-avatar-placeholder, .about-avatar-placeholder {
-      width: 160px;
-      height: 160px;
+      width: 280px;
+      height: 280px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       font-family: var(--font-display);
-      font-size: 4rem;
+      font-size: 7rem;
       font-weight: var(--font-display-weight);
       background: var(--accent-soft);
       color: var(--accent);
-      border: 4px solid var(--accent-soft);
-      box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+      border: 5px solid var(--accent-soft);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.12);
+      position: relative;
+      z-index: 2;
     }
 
     /* Studio hero */
     .hero-studio {
       background: linear-gradient(135deg, var(--hero-bg) 0%, var(--bg) 100%);
-      min-height: 70vh;
-      display: flex;
-      align-items: center;
     }
-    .hero-studio .hero-visual::before {
-      content: '';
+    .hero-studio-glow {
       position: absolute;
-      width: 280px;
-      height: 280px;
+      left: -10%;
+      top: -10%;
+      width: 55vw;
+      height: 55vw;
       border-radius: 50%;
       background: var(--accent-soft);
-      opacity: 0.5;
-      z-index: 1;
+      opacity: 0.35;
+      filter: blur(80px);
+      z-index: 0;
+    }
+    .hero-studio-blob {
+      position: absolute;
+      right: -5%;
+      bottom: -10%;
+      width: 45vw;
+      height: 45vw;
+      border-radius: 50%;
+      background: var(--accent-gradient);
+      opacity: 0.12;
+      filter: blur(60px);
+      z-index: 0;
     }
 
     /* Creative hero */
     .hero-creative {
       background: var(--hero-bg);
-      min-height: 85vh;
-      display: flex;
-      align-items: center;
     }
     .hero-creative-bg {
       position: absolute;
       inset: 0;
       background: var(--accent-gradient);
-      opacity: 0.08;
+      opacity: 0.1;
       z-index: 0;
     }
     .hero-creative-shape {
       position: absolute;
-      right: -10%;
-      top: -20%;
-      width: 60vw;
-      height: 60vw;
+      right: -12%;
+      top: -15%;
+      width: 70vw;
+      height: 70vw;
+      max-width: 900px;
+      max-height: 900px;
       border-radius: 50%;
       background: var(--accent-soft);
+      opacity: 0.35;
+      z-index: 0;
+    }
+    .hero-creative-dots {
+      position: absolute;
+      left: 4%;
+      bottom: 10%;
+      width: 120px;
+      height: 120px;
+      background-image: radial-gradient(var(--accent) 1.5px, transparent 1.5px);
+      background-size: 14px 14px;
       opacity: 0.25;
       z-index: 0;
     }
-    .hero-creative .hero-inner {
-      position: relative;
-      z-index: 1;
-    }
     .hero-creative .hero-content {
-      padding-right: 2rem;
+      padding-right: 1rem;
     }
-    .hero-creative .hero-visual::before {
-      content: '';
-      position: absolute;
-      inset: -20px;
-      border: 3px solid var(--accent);
-      border-radius: var(--radius);
-      z-index: 1;
+    .hero-creative .hero-visual-framed {
+      background: linear-gradient(135deg, var(--accent-soft), transparent 55%);
     }
 
     /* Minimal hero */
     .hero-minimal {
       background: var(--bg);
       text-align: center;
-      min-height: 80vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    }
+    .hero-minimal-glow {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 70vw;
+      height: 70vw;
+      max-width: 800px;
+      max-height: 800px;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      opacity: 0.25;
+      filter: blur(90px);
+      z-index: 0;
     }
     .hero-minimal .hero-inner {
       grid-template-columns: 1fr;
-      max-width: 720px;
+      max-width: 760px;
+    }
+    .hero-minimal-avatar {
+      position: relative;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+    .hero-minimal .hero-visual-ring {
+      width: 240px;
+      height: 240px;
     }
     .hero-minimal .avatar, .hero-minimal .hero-avatar-placeholder {
-      margin: 0 auto 1.5rem;
+      width: 220px;
+      height: 220px;
+      margin: 0;
     }
+    .hero-minimal .hero-summary { margin: 0 auto; }
+    .hero-minimal .hero-actions { justify-content: center; }
+    .hero-minimal .hero-socials { justify-content: center; }
 
     /* Sections */
     .section {
@@ -883,12 +1039,34 @@ function globalStyles() {
       }
       .nav-open .nav-links { display: flex; }
       .nav-toggle { display: flex; }
-      .hero-inner { grid-template-columns: 1fr; gap: 2rem; }
+      .site-hero { min-height: auto; padding: 4.5rem 1.25rem 2rem; }
+      .hero-inner { grid-template-columns: 1fr; gap: 1rem; }
+      .hero-visual { min-height: auto; order: -1; padding: 0.25rem 0; }
+      .hero-visual-framed { max-width: 180px; }
+      .hero-visual-ring { display: none; }
+      .hero-visual .avatar, .hero-minimal .avatar {
+        width: 140px !important;
+        height: 140px !important;
+      }
+      .hero-avatar-placeholder, .about-avatar-placeholder {
+        width: 140px;
+        height: 140px;
+        font-size: 3.5rem;
+      }
+      .hero-eyebrow { margin-bottom: 0.4rem; }
+      .hero-content h1, .hero-text h1, .hero-minimal h1 { font-size: clamp(2.2rem, 9vw, 2.8rem); }
+      .hero-title { margin-bottom: 0.6rem; }
+      .hero-summary { font-size: 0.95rem; max-width: 46ch; }
+      .hero-skills { margin-top: 0.9rem; }
+      .hero-actions { margin-top: 1.1rem; }
+      .hero-socials { margin-top: 1rem; }
       .hero-creative .hero-content { padding-right: 0; }
       .hero-creative-shape { display: none; }
       .about-grid { grid-template-columns: 1fr; gap: 2rem; }
       .hero-actions { justify-content: center; }
-      .hero-studio .hero-visual { order: -1; }
+      .hero-socials { justify-content: center; }
+      .hero-minimal-avatar { margin-bottom: 0.5rem; }
+      .hero-minimal .avatar, .hero-minimal .hero-avatar-placeholder { width: 130px !important; height: 130px !important; }
     }
   `;
 }
