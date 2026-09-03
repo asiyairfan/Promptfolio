@@ -12,10 +12,10 @@ import { deployProvider } from './services/deploy/index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3003;
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
 
-app.use(cors({ origin: [FRONTEND_ORIGIN, 'http://localhost:5173'] }));
+app.use(cors({ origin: [FRONTEND_ORIGIN, 'http://localhost:5173', 'http://localhost:5174'] }));
 app.use(express.json({ limit: '2mb' }));
 app.use('/p', express.static(path.join(__dirname, 'published')));
 
