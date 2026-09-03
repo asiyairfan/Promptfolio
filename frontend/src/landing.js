@@ -31,7 +31,7 @@ export function renderLanding(state, dispatch) {
       el('div', { class: 'feature-grid' }, [
         featureCard('1', 'Upload', 'Drop your resume PDF or paste plain text.'),
         featureCard('2', 'Review', 'Edit anything the AI parser missed.'),
-        featureCard('3', 'Style', 'Choose from 9 presets and 5 layouts.'),
+        featureCard('3', 'Style', 'Choose from 9 presets and 3 layouts.'),
         featureCard('4', 'Publish', 'Deploy a live page after signing in.'),
       ]),
     ]),

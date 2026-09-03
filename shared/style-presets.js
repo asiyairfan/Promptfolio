@@ -1,28 +1,18 @@
 export const LAYOUTS = {
-  timeline: {
-    id: "timeline",
-    label: "Timeline",
-    description: "Clean single-column flow. Great for narrative-driven resumes."
+  studio: {
+    id: "studio",
+    label: "Studio",
+    description: "Modern single-page portfolio with sticky nav, hero, and card sections."
   },
-  sidebar: {
-    id: "sidebar",
-    label: "Sidebar",
-    description: "Left accent rail for contact and skills, content on the right."
+  creative: {
+    id: "creative",
+    label: "Creative",
+    description: "Bold split hero with decorative shapes and high-contrast typography."
   },
-  split: {
-    id: "split",
-    label: "Split",
-    description: "Fixed hero column on the left, scrolling content on the right."
-  },
-  cards: {
-    id: "cards",
-    label: "Cards",
-    description: "Each section becomes an elevated card in a responsive grid."
-  },
-  magazine: {
-    id: "magazine",
-    label: "Magazine",
-    description: "Two-column editorial flow with a full-width hero band."
+  minimal: {
+    id: "minimal",
+    label: "Minimal",
+    description: "Centered, airy layout with generous whitespace and elegant type."
   }
 };
 
@@ -31,13 +21,13 @@ const BASE_TOKENS = {
   headingTransform: "uppercase",
   headingLetterSpacing: "0.04em",
   bodyFontSize: "1rem",
-  lineHeight: "1.55",
+  lineHeight: "1.6",
   heroStyle: "plain",
   sectionDivider: "line",
   skillStyle: "chip",
   heroBg: "#ffffff",
   avatarShape: "circle",
-  accentGradient: "none"
+  accentGradient: "linear-gradient(135deg, var(--color-accent), transparent)"
 };
 
 function tokens(base, overrides = {}) {
@@ -62,7 +52,7 @@ export const PRESETS = {
       fontUrl: "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap",
       radius: "0px",
       spacing: "1.35rem",
-      maxWidth: "820px"
+      maxWidth: "1040px"
     }, { headingLetterSpacing: "0.06em", avatarShape: "rounded" })
   },
   modern: {
@@ -80,9 +70,9 @@ export const PRESETS = {
       fontDisplay: "\"Inter\", system-ui, sans-serif",
       fontBody: "\"Inter\", system-ui, sans-serif",
       fontUrl: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
-      radius: "8px",
+      radius: "12px",
       spacing: "1.25rem",
-      maxWidth: "860px"
+      maxWidth: "1100px"
     }, { headingTransform: "none", fontDisplayWeight: "700", headingLetterSpacing: "0.02em", heroStyle: "banner", sectionDivider: "bar", heroBg: "#f5f7ff" })
   },
   bold: {
@@ -102,7 +92,7 @@ export const PRESETS = {
       fontUrl: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap",
       radius: "12px",
       spacing: "1.4rem",
-      maxWidth: "900px"
+      maxWidth: "1120px"
     }, { fontDisplayWeight: "700", headingLetterSpacing: "0.08em", bodyFontSize: "1.05rem", lineHeight: "1.45", heroStyle: "split", sectionDivider: "none", skillStyle: "outline", heroBg: "#1a1a1d", avatarShape: "square", accentGradient: "linear-gradient(135deg, #f59e0b, #ef4444)" })
   },
   warm: {
@@ -120,9 +110,9 @@ export const PRESETS = {
       fontDisplay: "\"Source Serif 4\", Georgia, serif",
       fontBody: "\"Source Sans 3\", system-ui, sans-serif",
       fontUrl: "https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Source+Sans+3:wght@400;600&display=swap",
-      radius: "4px",
+      radius: "8px",
       spacing: "1.3rem",
-      maxWidth: "840px"
+      maxWidth: "1080px"
     }, { headingTransform: "none", fontDisplayWeight: "600", headingLetterSpacing: "0.03em", lineHeight: "1.65", heroStyle: "centered", sectionDivider: "line", skillStyle: "chip", heroBg: "#fffaf5", avatarShape: "circle" })
   },
   mint: {
@@ -140,9 +130,9 @@ export const PRESETS = {
       fontDisplay: "\"Inter\", system-ui, sans-serif",
       fontBody: "\"Inter\", system-ui, sans-serif",
       fontUrl: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
-      radius: "8px",
+      radius: "10px",
       spacing: "1.25rem",
-      maxWidth: "860px"
+      maxWidth: "1100px"
     }, { fontDisplayWeight: "700", headingLetterSpacing: "0.05em", bodyFontSize: "0.95rem", heroStyle: "banner", sectionDivider: "bar", heroBg: "#14261D", avatarShape: "circle" })
   },
   editorial: {
@@ -160,9 +150,9 @@ export const PRESETS = {
       fontDisplay: "\"Libre Baskerville\", Georgia, serif",
       fontBody: "\"Libre Baskerville\", Georgia, serif",
       fontUrl: "https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap",
-      radius: "4px",
+      radius: "6px",
       spacing: "1.4rem",
-      maxWidth: "800px"
+      maxWidth: "960px"
     }, { headingTransform: "none", fontDisplayWeight: "700", headingLetterSpacing: "0.01em", bodyFontSize: "1.05rem", lineHeight: "1.7", heroStyle: "centered", sectionDivider: "none", skillStyle: "outline", heroBg: "#FDFCF8", avatarShape: "none" })
   },
   terminal: {
@@ -182,7 +172,7 @@ export const PRESETS = {
       fontUrl: "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap",
       radius: "0px",
       spacing: "1.25rem",
-      maxWidth: "900px"
+      maxWidth: "1060px"
     }, { fontDisplayWeight: "700", headingLetterSpacing: "0.08em", bodyFontSize: "0.95rem", lineHeight: "1.55", heroStyle: "plain", sectionDivider: "line", skillStyle: "inline", heroBg: "#0c0c0c", avatarShape: "none" })
   },
   pastel: {
@@ -200,9 +190,9 @@ export const PRESETS = {
       fontDisplay: "\"Quicksand\", sans-serif",
       fontBody: "\"Quicksand\", sans-serif",
       fontUrl: "https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap",
-      radius: "20px",
+      radius: "22px",
       spacing: "1.3rem",
-      maxWidth: "860px"
+      maxWidth: "1100px"
     }, { headingTransform: "none", fontDisplayWeight: "700", headingLetterSpacing: "0.02em", lineHeight: "1.6", heroStyle: "banner", sectionDivider: "none", skillStyle: "chip", heroBg: "#FFEAEE", avatarShape: "circle" })
   },
   slate: {
@@ -220,14 +210,14 @@ export const PRESETS = {
       fontDisplay: "\"Archivo\", sans-serif",
       fontBody: "\"Inter\", system-ui, sans-serif",
       fontUrl: "https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Inter:wght@400;500;600&display=swap",
-      radius: "4px",
+      radius: "6px",
       spacing: "1.15rem",
-      maxWidth: "880px"
+      maxWidth: "1100px"
     }, { fontDisplayWeight: "800", headingLetterSpacing: "0.1em", bodyFontSize: "0.95rem", lineHeight: "1.45", heroStyle: "plain", sectionDivider: "bar", skillStyle: "outline", heroBg: "#f1f5f9", avatarShape: "rounded" })
   }
 };
 
-export const DEFAULT_LAYOUT = "timeline";
+export const DEFAULT_LAYOUT = "studio";
 export const DEFAULT_PRESET = "modern";
 
 export function getPreset(id) {
