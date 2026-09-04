@@ -1,10 +1,6 @@
 -- Run this in the Supabase SQL Editor after creating the project.
 -- It sets up the public tables, triggers, and RLS policies for the portfolio builder.
 
--- Enable RLS on every table.
-ALTER TABLE IF EXISTS public.profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.portfolios ENABLE ROW LEVEL SECURITY;
-
 -- Profiles: mirrors auth.users so the app can look up user info quickly.
 CREATE TABLE IF NOT EXISTS public.profiles (
   id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -38,6 +34,10 @@ ALTER TABLE public.portfolios ADD COLUMN IF NOT EXISTS deploy_provider text;
 ALTER TABLE public.portfolios ADD COLUMN IF NOT EXISTS deploy_project_id text;
 ALTER TABLE public.portfolios ADD COLUMN IF NOT EXISTS deploy_project_name text;
 ALTER TABLE public.portfolios ADD COLUMN IF NOT EXISTS deployment_id text;
+
+-- Enable RLS on every table after creating them.
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.portfolios ENABLE ROW LEVEL SECURITY;
 
 -- Indexes for common lookups.
 CREATE INDEX IF NOT EXISTS idx_portfolios_user_id ON public.portfolios(user_id);

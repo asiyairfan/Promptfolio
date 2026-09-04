@@ -29,6 +29,8 @@ FRONTEND_ORIGIN=http://localhost:5173
 GROQ_API_KEY=your_groq_key
 GROQ_BASE_URL=https://api.groq.com/openai/v1
 GROQ_MODEL=qwen/qwen3.8-27b
+# Conservative starting budget. Increase for long resumes; larger values reserve more of Groq's output-token rate limit.
+GROQ_MAX_TOKENS=800
 VERCEL_TOKEN=your_vercel_token
 VERCEL_TEAM_ID=your_optional_team_id
 # Development only; public publishing should use Vercel.
@@ -36,7 +38,11 @@ ALLOW_LOCAL_DEPLOY=false
 PUBLIC_BASE_URL=http://localhost:3003
 ```
 
-Public publishing requires `VERCEL_TOKEN`; a failed Vercel request is returned to the user instead of producing a localhost link. For isolated local development only, set `ALLOW_LOCAL_DEPLOY=true` to publish static files under `backend/published`.
+Public publishing requires `VERCEL_TOKEN`; a failed Vercel request is returned to the user instead of producing a localhost link. For isolated local development only, set `ALLOW_LOCAL_DEPLOY=true` and restart the backend to publish static files under `backend/published`.
+
+`GROQ_MAX_TOKENS` defaults to `800` as a conservative starting point. Increase it for a long resume if parsing reports truncation; lower it if Groq returns a rate-limit error for a short resume. Qwen 3 parsing disables reasoning so the completion budget is reserved for the resume JSON.
+
+Before publishing, run `supabase/schema.sql` in the Supabase SQL Editor. Re-run it after pulling this change to create any missing deployment metadata columns and apply RLS to newly created tables.
 
 ## Run locally
 

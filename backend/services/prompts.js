@@ -11,7 +11,7 @@ ${schemaAsJson()}
 Rules:
 - Keep every field as a string.
 - For experience and education, preserve dates exactly as written when possible.
-- For descriptions, keep the original wording; do not invent details.
+- Preserve every meaningful source detail and every listed item. Do not summarize, omit, or invent content.
 - If a section is missing, use an empty string or empty array as appropriate.
 - Contact may include email, phone, location, and website. Extract any website/portfolio/LinkedIn/Github URL and put it in website.
 
