@@ -2,6 +2,7 @@ import { writeFile, mkdir, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import crypto from 'node:crypto';
+import { copyTemplateAssets } from './template-assets.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLISHED_DIR = path.join(__dirname, '..', '..', 'published');
@@ -20,11 +21,12 @@ function localDeploymentDir(deploymentId) {
   return dir;
 }
 
-export async function deployLocal(html) {
+export async function deployLocal(html, layoutId) {
   const id = crypto.randomUUID();
   const dir = localDeploymentDir(id);
   await mkdir(dir, { recursive: true });
   await writeFile(path.join(dir, 'index.html'), html, 'utf-8');
+  await copyTemplateAssets(layoutId, dir);
 
   const publicBase = process.env.PUBLIC_BASE_URL || 'http://localhost:3003';
   return {

@@ -1,3 +1,5 @@
+import { vercelTemplateFiles } from './template-assets.js';
+
 const VERCEL_API = 'https://api.vercel.com';
 const MAX_POLL_SECONDS = 45;
 const POLL_INTERVAL_MS = 1500;
@@ -68,15 +70,16 @@ export async function deleteVercelDeployment({ projectId, projectName, deploymen
   }
 }
 
-export async function deployToVercel(html) {
+export async function deployToVercel(html, layoutId) {
   const name = `ai-portfolio-${Date.now()}`;
   const data = Buffer.from(html, 'utf-8').toString('base64');
+  const templateFiles = await vercelTemplateFiles(layoutId);
 
   const deployment = await vercelFetch('/v13/deployments', {
     method: 'POST',
     body: JSON.stringify({
       name,
-      files: [{ file: 'index.html', data, encoding: 'base64' }],
+      files: [{ file: 'index.html', data, encoding: 'base64' }, ...templateFiles],
       projectSettings: {
         framework: null,
         buildCommand: null,

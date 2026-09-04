@@ -13,6 +13,31 @@ export const LAYOUTS = {
     id: "minimal",
     label: "Minimal",
     description: "Text-only introduction with a concise resume list and restrained navigation."
+  },
+  evans: {
+    id: "evans",
+    label: "Evans",
+    description: "Classic Bootstrap portfolio with a bold hero, timeline, and work grid."
+  },
+  mark: {
+    id: "mark",
+    label: "Mark",
+    description: "Dark personal portfolio with a full-screen introduction and layered sections."
+  },
+  patrix: {
+    id: "patrix",
+    label: "Patrix",
+    description: "Colorful agency-inspired portfolio with rounded visual panels and editorial type."
+  },
+  iportfolio: {
+    id: "iportfolio",
+    label: "iPortfolio",
+    description: "Sidebar-led Bootstrap resume layout with skills, experience, and project work."
+  },
+  folio: {
+    id: "folio",
+    label: "Folio",
+    description: "Minimal Tailwind portfolio with oversized typography and calm editorial spacing."
   }
 };
 

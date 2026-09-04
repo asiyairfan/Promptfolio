@@ -9,6 +9,7 @@ import { renderLanding } from './landing.js';
 import { renderPortfolios } from './portfolios.js';
 import { el } from './dom.js';
 import { supabase, getCurrentUser, getSession } from './supabase.js';
+import { API_URL } from './api.js';
 
 const STEPS = [
   { id: 'upload', label: 'Upload' },
@@ -204,7 +205,10 @@ function updatePreview(immediate = false) {
 
   if (!frame || (key === previewKey && frame.srcdoc)) return;
 
-  const html = renderPortfolio(state.resume, state.layout, state.preset);
+  const html = renderPortfolio(state.resume, state.layout, state.preset, {
+    mode: 'preview',
+    assetBase: `${API_URL}/templates/`,
+  });
   const layoutChanged = state.layout !== lastPreviewLayout;
   const presetChanged = state.preset !== lastPreviewPreset;
   const shouldUpdateImmediately = immediate || layoutChanged || presetChanged;

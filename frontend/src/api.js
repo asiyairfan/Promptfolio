@@ -1,6 +1,6 @@
 import { getSession } from './supabase.js';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3003';
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3003';
 
 async function authHeaders() {
   const session = await getSession();

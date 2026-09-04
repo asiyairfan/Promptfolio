@@ -33,8 +33,8 @@ router.post('/', requireAuth, async (req, res, next) => {
 
     const { data, warnings } = coerceResume(resume);
     const safeLayout = getLayout(layout).id;
-    const html = renderPortfolio(data, safeLayout, preset);
-    const deployed = await deploy(html);
+    const html = renderPortfolio(data, safeLayout, preset, { mode: 'published' });
+    const deployed = await deploy(html, safeLayout);
 
     const slug = generateSlug(data);
     const { error: dbError } = await supabase

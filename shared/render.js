@@ -1,44 +1,13 @@
 import { getPreset } from './style-presets.js';
+import { escapeHtml, joinLines, safeImageUrl, safeUrl } from './html-helpers.js';
+import { getOriginalTemplateLayout } from './template-layouts.js';
+import { renderEvans } from './templates/evans.js';
+import { renderMark } from './templates/mark.js';
+import { renderPatrix } from './templates/patrix.js';
+import { renderIPortfolio } from './templates/iportfolio.js';
+import { renderFolio } from './templates/folio.js';
 
-export function escapeHtml(text) {
-  if (text === null || text === undefined) return '';
-  return String(text)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
-const ALLOWED_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'tel:']);
-
-export function safeUrl(raw) {
-  if (!raw) return '';
-  let url = raw.trim();
-  try {
-    const parsed = new URL(url, 'https://example.com');
-    if (!ALLOWED_PROTOCOLS.has(parsed.protocol)) return '';
-    if (parsed.protocol === 'mailto:' && !parsed.pathname.includes('@')) return '';
-    return url;
-  } catch {
-    return '';
-  }
-}
-
-function safeImageUrl(raw) {
-  if (!raw) return '';
-  const trimmed = raw.trim();
-  if (/^data:image\/(jpeg|png);base64,/i.test(trimmed)) return trimmed;
-  const url = safeUrl(trimmed);
-  return /^https?:\/\//i.test(url) ? url : '';
-}
-
-function joinLines(text) {
-  return escapeHtml(text)
-    .split(/\n+/)
-    .map((line) => `<p>${line}</p>`)
-    .join('');
-}
+export { escapeHtml, safeUrl };
 
 function avatarHtml(url, shape, size = '96px') {
   const safe = safeImageUrl(url);
@@ -456,6 +425,14 @@ const LAYOUT_BUILDERS = {
   studio: buildStudio,
   creative: buildCreative,
   minimal: buildMinimal
+};
+
+const ORIGINAL_TEMPLATE_BUILDERS = {
+  evans: renderEvans,
+  mark: renderMark,
+  patrix: renderPatrix,
+  iportfolio: renderIPortfolio,
+  folio: renderFolio
 };
 
 const LAYOUT_NAV_LINKS = {
@@ -1172,7 +1149,17 @@ function interactionScript() {
   </script>`;
 }
 
-export function renderPortfolio(resume, layoutId, presetId) {
+export function renderPortfolio(resume, layoutId, presetId, options = {}) {
+  const originalTemplate = getOriginalTemplateLayout(layoutId);
+  if (originalTemplate) {
+    const builder = ORIGINAL_TEMPLATE_BUILDERS[layoutId];
+    const assetRoot = String(options.assetBase || '').replace(/\/+$/, '');
+    const baseHref = options.mode === 'preview' && assetRoot
+      ? `${assetRoot}/${originalTemplate.assetDirectory}/`
+      : '';
+    return builder(resume, { baseHref });
+  }
+
   const preset = getPreset(presetId);
   const tokens = preset.tokens;
   const tokenVars = Object.entries(tokens)

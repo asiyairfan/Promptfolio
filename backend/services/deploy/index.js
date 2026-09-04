@@ -13,11 +13,11 @@ export function deployProvider() {
   return process.env.ALLOW_LOCAL_DEPLOY === 'true' ? 'local' : 'unconfigured';
 }
 
-export async function deploy(html) {
+export async function deploy(html, layoutId) {
   const provider = deployProvider();
 
-  if (provider === 'vercel') return deployToVercel(html);
-  if (provider === 'local') return deployLocal(html);
+  if (provider === 'vercel') return deployToVercel(html, layoutId);
+  if (provider === 'local') return deployLocal(html, layoutId);
 
   throw deploymentError(
     'Public publishing requires a VERCEL_TOKEN. Set ALLOW_LOCAL_DEPLOY=true only for local development.',
