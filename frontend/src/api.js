@@ -2,13 +2,16 @@ import { getSession } from './supabase.js';
 
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3003';
 
-async function authHeaders() {
+async function authHeader() {
   const session = await getSession();
-  const headers = { 'Content-Type': 'application/json' };
-  if (session?.access_token) {
-    headers.Authorization = `Bearer ${session.access_token}`;
-  }
-  return headers;
+  return session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {};
+}
+
+async function authHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    ...(await authHeader()),
+  };
 }
 
 async function handleResponse(res) {
@@ -41,11 +44,41 @@ export async function parseResume(text, jobDescription = '', suggestStyle = true
   return handleResponse(res);
 }
 
+export async function uploadProjectImage(image, filename) {
+  const form = new FormData();
+  form.append('image', image, filename);
+  const res = await fetch(`${API_URL}/api/publish/image`, {
+    method: 'POST',
+    headers: await authHeader(),
+    body: form,
+  });
+  return handleResponse(res);
+}
+
+function isInlineProjectImage(value) {
+  return /^data:image\/(?:jpeg|png);base64,/i.test(value || '');
+}
+
+async function uploadInlineProjectImages(resume) {
+  const projects = await Promise.all((resume.projects || []).map(async (project) => {
+    if (!isInlineProjectImage(project.imageUrl)) return project;
+
+    const response = await fetch(project.imageUrl);
+    const image = await response.blob();
+    const filename = image.type === 'image/png' ? 'project.png' : 'project.jpg';
+    const { url } = await uploadProjectImage(image, filename);
+    return { ...project, imageUrl: url };
+  }));
+
+  return { ...resume, projects };
+}
+
 export async function publish(resume, layout, preset) {
+  const publishableResume = await uploadInlineProjectImages(resume);
   const res = await fetch(`${API_URL}/api/publish`, {
     method: 'POST',
     headers: await authHeaders(),
-    body: JSON.stringify({ resume, layout, preset }),
+    body: JSON.stringify({ resume: publishableResume, layout, preset }),
   });
   return handleResponse(res);
 }

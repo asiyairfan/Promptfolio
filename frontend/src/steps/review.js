@@ -1,3 +1,4 @@
+import { uploadProjectImage } from '../api.js';
 import { el } from '../dom.js';
 
 export function renderReview(state, dispatch) {
@@ -234,8 +235,8 @@ function imageField(value, onChange) {
   const isDataUri = /^data:image\/(jpeg|png);base64,/i.test(value || '');
   const valid = !value || isValidImageUrl(value);
   const hint = valid
-    ? 'Paste a public image URL or upload a JPEG/PNG file.'
-    : 'Use a complete public http(s) URL or upload a JPEG/PNG file.';
+    ? 'Paste a public image URL or upload an image file.'
+    : 'Use a complete public http(s) URL or upload an image file.';
 
   let inputOrPreview;
   if (isDataUri) {
@@ -260,7 +261,7 @@ function imageField(value, onChange) {
 
   const fileInput = el('input', {
     type: 'file',
-    accept: 'image/jpeg,image/png',
+    accept: 'image/*',
     class: 'image-file-input',
     onchange: async (e) => {
       const file = e.target.files[0];
@@ -271,10 +272,12 @@ function imageField(value, onChange) {
         return;
       }
       try {
-        const dataUri = await downscaleImage(file);
-        onChange(dataUri);
+        const image = await downscaleImage(file);
+        const filename = image.type === 'image/png' ? 'project.png' : 'project.jpg';
+        const { url } = await uploadProjectImage(image, filename);
+        onChange(url);
       } catch {
-        window.alert('Could not process the image. Try a JPEG or PNG under 5 MB.');
+        window.alert('Could not upload the image. Try another image under 5 MB.');
       }
     },
   });
@@ -311,7 +314,10 @@ function downscaleImage(file, maxWidth = 1200, quality = 0.85) {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         const mime = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
-        resolve(canvas.toDataURL(mime, quality));
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Could not process the image.'));
+        }, mime, quality);
       };
       img.onerror = reject;
       img.src = e.target.result;

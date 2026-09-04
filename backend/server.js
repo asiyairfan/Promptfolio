@@ -18,6 +18,8 @@ const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
 const TEMPLATES_DIR = process.env.TEMPLATES_DIR || path.join(__dirname, 'templates');
 
 app.use(cors({ origin: [FRONTEND_ORIGIN, 'http://localhost:5173', 'http://localhost:5174'] }));
+app.use('/api/publish', express.json({ limit: '10mb' }));
+app.use('/api/publish', express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.json({ limit: '2mb' }));
 app.use('/p', express.static(path.join(__dirname, 'published')));
 app.use('/templates', express.static(TEMPLATES_DIR));
