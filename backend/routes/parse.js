@@ -19,6 +19,7 @@ router.post('/', async (req, res, next) => {
 
     res.json({
       resume: result.resume,
+      score: result.score,
       styleSuggestion: result.styleSuggestion,
       warnings: result.warnings,
       meta: result.meta
