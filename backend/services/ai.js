@@ -10,6 +10,9 @@ const API_KEY = process.env.GROQ_API_KEY;
 const BASE_URL = (process.env.GROQ_BASE_URL || 'https://api.groq.com/openai/v1').replace(/\/$/, '');
 const MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
 const USES_QWEN3 = MODEL.toLowerCase().startsWith('qwen/qwen3');
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/openai';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite';
 const SECTION_IDS = ['profile', 'experience', 'education', 'skills', 'projects'];
 const SECTION_HEADINGS = {
   profile: new Set(['profile', 'professional summary', 'summary', 'objective', 'career objective', 'about', 'about me', 'contact', 'contact information', 'personal information']),
@@ -116,9 +119,13 @@ async function getModelCapabilities() {
   return modelCapabilitiesPromise;
 }
 
-async function callGroq(prompt, attempt, capabilities) {
+async function callModel(prompt, attempt, capabilities, useGemini = false) {
+  const apiKey = useGemini ? GEMINI_API_KEY : API_KEY;
+  const baseUrl = useGemini ? GEMINI_BASE_URL : BASE_URL;
+  const model = useGemini ? GEMINI_MODEL : MODEL;
+
   const body = {
-    model: MODEL,
+    model,
     messages: [
       {
         role: 'system',
@@ -132,22 +139,22 @@ async function callGroq(prompt, attempt, capabilities) {
     response_format: { type: 'json_object' }
   };
 
-  if (USES_QWEN3 && capabilities.supportsReasoning) {
+  if (!useGemini && USES_QWEN3 && capabilities.supportsReasoning) {
     body.reasoning_effort = 'none';
   }
 
-  const res = await fetch(`${BASE_URL}/chat/completions`, {
+  const res = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${API_KEY}`
+      Authorization: `Bearer ${apiKey}`
     },
     body: JSON.stringify(body)
   });
 
   if (!res.ok) {
     const errText = await res.text().catch(() => 'unknown');
-    const error = new Error(`Groq HTTP ${res.status}: ${errText}`);
+    const error = new Error(`${useGemini ? 'Gemini' : 'Groq'} HTTP ${res.status}: ${errText}`);
     error.status = res.status;
     throw error;
   }
@@ -155,8 +162,20 @@ async function callGroq(prompt, attempt, capabilities) {
   const data = await res.json();
   const choice = data.choices?.[0];
   const content = choice?.message?.content;
-  if (!content) throw new Error('Empty completion from Groq');
+  if (!content) throw new Error(`Empty completion from ${useGemini ? 'Gemini' : 'Groq'}`);
   return { content, finishReason: choice.finish_reason };
+}
+
+async function callGroq(prompt, attempt, capabilities) {
+  try {
+    return await callModel(prompt, attempt, capabilities, false);
+  } catch (err) {
+    if (err.status === 429 && GEMINI_API_KEY) {
+      console.warn('Groq rate-limited — falling back to Gemini for this request.');
+      return callModel(prompt, attempt, capabilities, true);
+    }
+    throw err;
+  }
 }
 
 async function requestJson(prompt, capabilities) {
