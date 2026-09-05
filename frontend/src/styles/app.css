@@ -898,3 +898,484 @@ button, input, textarea, select {
 @media (max-width: 640px) {
   .form-row { grid-template-columns: 1fr; }
 }
+/* ============================================
+   NEW: How it works, full-width step sections
+   These rules override the earlier .features-section
+   block by source order (same selector, later wins).
+   ============================================ */
+
+.features-section {
+  padding: 0;
+  background: transparent;
+  border-top: none;
+}
+
+.features-section h2 {
+  padding-top: 3rem;
+}
+
+.step-section {
+  padding: 4rem 1.5rem;
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.step-section:nth-child(odd) {
+  background: var(--surface);
+}
+
+.step-section:nth-child(even) {
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+
+.step-section {
+  padding: 4rem 1.5rem;
+  opacity: 0;
+  transform: translateY(36px) scale(0.98);
+  transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1), transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.step-section.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.step-section-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+
+.step-text {
+  order: 1;
+}
+
+.step-visual {
+  order: 2;
+}
+
+.step-section--reverse .step-text {
+  order: 2;
+}
+
+.step-section--reverse .step-visual {
+  order: 1;
+}
+
+.step-badge {
+  display: inline-grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 50%;
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.step-text h3 {
+  margin: 0 0 0.6rem;
+  font-size: 1.6rem;
+}
+
+.step-text p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.05rem;
+  max-width: 42ch;
+}
+
+.step-visual {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+}
+
+.step-visual-mark {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 2.25rem;
+}
+
+@media (max-width: 800px) {
+  .step-section-inner {
+    grid-template-columns: 1fr;
+  }
+  .step-text,
+  .step-section--reverse .step-text {
+    order: 1;
+  }
+  .step-visual,
+  .step-section--reverse .step-visual {
+    order: 2;
+  }
+}
+
+/* ============================================
+   Character-select template showcase
+   ============================================ */
+
+.template-showcase {
+  padding: 3rem 1.5rem 4rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1), transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.template-showcase.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.template-showcase h2 {
+  text-align: center;
+  margin: 0 0 2.5rem;
+  font-size: 1.5rem;
+}
+
+.template-select-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 2.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.template-select-card {
+  appearance: none;
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+  cursor: pointer;
+  filter: brightness(0.6);
+  opacity: 0;
+  transition: filter 250ms ease, transform 250ms ease, box-shadow 250ms ease, border-color 250ms ease;
+}
+
+.template-select-card.is-visible {
+  opacity: 1;
+}
+
+.template-select-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  margin-bottom: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.template-select-name {
+  display: block;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.template-select-card.is-visible:hover,
+.template-select-card.is-visible:focus-visible {
+  filter: brightness(1.12);
+  transform: scale(1.06) translateY(-4px);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent), 0 14px 32px -10px rgba(212, 175, 55, 0.5);
+  outline: none;
+}
+
+.template-select-card.is-selected {
+  filter: brightness(1);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent), 0 0 26px rgba(212, 175, 55, 0.35);
+}
+
+.template-select-card.is-visible.is-selected:hover,
+.template-select-card.is-visible.is-selected:focus-visible {
+  filter: brightness(1.12);
+}
+/* ============================================
+   NEW: Hero collage (scattered spiral-in cards)
+   ============================================ */
+
+.hero-section {
+  position: relative;
+  overflow: hidden;
+  display: block;
+  min-height: min(82vh, 720px);
+  padding: 3rem 1.25rem 4rem;
+  max-width: none;
+  margin: 0;
+}
+
+.hero-collage {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hero-card {
+  position: absolute;
+  width: var(--card-w);
+  pointer-events: auto;
+  opacity: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.55);
+}
+
+.hero-card img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-card.is-settled {
+  opacity: 1;
+  transform: translate(-50%, -50%) rotate(var(--rotate));
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+
+.hero-card.is-settled:hover,
+.hero-card.is-settled:focus-visible {
+  transform: translate(-50%, -50%) translateY(-10px) rotate(0deg);
+  box-shadow: 0 24px 48px -16px rgba(212, 175, 55, 0.35);
+  z-index: 5;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 620px;
+  margin: 4rem auto 0;
+  text-align: center;
+  padding: 1.5rem 1.25rem;
+}
+
+.hero-content::before {
+  content: '';
+  position: absolute;
+  inset: -2rem -1.5rem;
+  z-index: -1;
+  border-radius: 24px;
+  background: radial-gradient(closest-side, var(--bg) 60%, transparent 100%);
+}
+
+@media (max-width: 480px) {
+  .hero-card {
+    width: calc(var(--card-w) * 0.72);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step-section,
+  .template-showcase,
+  .template-select-card {
+    transition: none;
+    transform: none;
+    opacity: 1;
+  }
+  .template-select-card.is-visible:hover,
+  .template-select-card.is-visible:focus-visible {
+    transform: none;
+  }
+  .reveal-word-inner {
+    transition: none;
+    transform: none;
+  }
+  .ambient-blob {
+    animation: none;
+  }
+}
+.reveal-heading {
+  overflow: visible;
+}
+
+.reveal-word {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  margin-right: 0.3em;
+}
+
+.reveal-word:last-child {
+  margin-right: 0;
+}
+
+.reveal-word-inner {
+  display: inline-block;
+  transform: translateY(115%);
+  transition: transform 650ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+
+.reveal-heading.is-visible .reveal-word-inner {
+  transform: translateY(0);
+}
+.ambient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ambient-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.28;
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+
+.ambient-blob--a {
+  width: 420px;
+  height: 420px;
+  top: -10%;
+  left: -8%;
+  background: var(--accent);
+  animation: driftA 26s ease-in-out infinite;
+}
+
+.ambient-blob--b {
+  width: 360px;
+  height: 360px;
+  top: 40%;
+  right: -10%;
+  background: #3f6b52;
+  animation: driftB 32s ease-in-out infinite;
+}
+
+.ambient-blob--c {
+  width: 300px;
+  height: 300px;
+  bottom: -12%;
+  left: 30%;
+  background: var(--accent);
+  opacity: 0.16;
+  animation: driftC 22s ease-in-out infinite;
+}
+
+@keyframes driftA {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(60px, 40px) scale(1.15); }
+}
+
+@keyframes driftB {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-50px, -30px) scale(1.1); }
+}
+
+@keyframes driftC {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(30px, -50px) scale(1.08); }
+}
+.site-footer {
+  border-top: 1px solid var(--border);
+  background: var(--panel);
+  padding: 3rem 1.5rem 1.5rem;
+}
+
+.site-footer-grid {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 2rem;
+}
+
+.site-footer-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.site-footer-brand .brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.site-footer-tagline {
+  color: var(--muted);
+  font-size: 0.9rem;
+  max-width: 32ch;
+  margin: 0;
+}
+
+.site-footer-heading {
+  margin: 0 0 0.85rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.site-footer-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.site-footer-links a {
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.92rem;
+  transition: color 150ms ease;
+}
+
+.site-footer-links a:hover,
+.site-footer-links a:focus-visible {
+  color: var(--accent);
+}
+
+.site-footer-bottom {
+  max-width: 1100px;
+  margin: 2.5rem auto 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 720px) {
+  .site-footer-grid {
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+  }
+  .site-footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
